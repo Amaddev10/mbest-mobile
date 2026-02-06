@@ -86,20 +86,19 @@ const styles = StyleSheet.create({
   inputContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderWidth: 1.5,
+    borderWidth: 1,
     borderColor: colors.border,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.background,
-    ...shadows.sm,
-    minHeight: 56,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surface,
+    minHeight: 48,
   },
   inputContainerFocused: {
     borderColor: colors.primary,
-    borderWidth: 2,
-    ...shadows.md,
+    borderWidth: 1,
   },
   inputContainerError: {
     borderColor: colors.error,
+    borderWidth: 1,
   },
   input: {
     flex: 1,

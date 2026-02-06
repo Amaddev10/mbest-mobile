@@ -19,6 +19,7 @@ import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
 import { launchImageLibrary } from 'react-native-image-picker';
+import { pick, types } from '@react-native-documents/picker';
 import { tutorService, type Resource, type ResourceRequest } from '../../services/api/tutor';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
@@ -708,43 +709,51 @@ const AddResourceModal: React.FC<AddResourceModalProps> = ({ visible, onClose, c
     },
   });
 
-  const handlePickFile = () => {
-    // Image picker for photos only - for PDFs/Documents, use URL input below
-    const options = {
-      mediaType: 'photo' as const,
-      selectionLimit: 1,
-      presentationStyle: 'fullScreen' as const,
-      includeBase64: false,
-    };
+  const handlePickFile = async () => {
+    try {
+      // Use DocumentPicker to allow all file types (images, PDFs, docs, etc.)
+      const result = await pick({
+        type: [
+          types.images,      // jpg, png, gif, etc.
+          types.pdf,         // PDF files
+          types.doc,         // DOC files
+          types.docx,        // DOCX files
+          types.plainText,   // TXT files
+          types.allFiles,    // All other files
+        ],
+        allowMultiSelection: false,
+      });
 
-    launchImageLibrary(options, (response) => {
-      if (response.didCancel) {
-        return;
-      }
-      
-      if (response.errorCode) {
-        Alert.alert('Error', response.errorMessage || 'Failed to pick file');
-        return;
-      }
-      
-      if (response.assets && response.assets.length > 0) {
-        const asset = response.assets[0];
+      if (result && result.length > 0) {
+        const file = result[0];
         
         const maxSize = 104857600; // 100MB
-        if (asset.fileSize && asset.fileSize > maxSize) {
+        if (file.size && file.size > maxSize) {
           Alert.alert('Error', 'File size must be less than 100MB');
           return;
         }
         
         setSelectedFile({
-          uri: asset.uri,
-          type: asset.type || 'image/jpeg',
-          name: asset.fileName || 'image.jpg',
-          size: asset.fileSize,
+          uri: file.uri || '',
+          type: file.type || 'application/octet-stream',
+          name: file.name || 'file',
+          size: file.size,
         });
         setFileUrl('');
       }
-    });
+    } catch (err: any) {
+      // Check if user cancelled the picker
+      if (err?.code === 'DOCUMENT_PICKER_CANCELED' || err?.message?.includes('cancel')) {
+        // User cancelled the picker - do nothing
+        return;
+      }
+      
+      // Only show error for actual errors, not cancellation
+      if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
+        Alert.alert('Error', 'Failed to pick file');
+        console.error('DocumentPicker Error:', err);
+      }
+    }
   };
 
   const handleSubmit = () => {
@@ -802,10 +811,6 @@ const AddResourceModal: React.FC<AddResourceModalProps> = ({ visible, onClose, c
         </View>
 
         <ScrollView style={styles.modalScroll} contentContainerStyle={styles.modalContent}>
-          <Text style={styles.modalSubtitle}>
-            Upload or link to educational resources for your students
-          </Text>
-
           <Input
             label="Resource Title *"
             placeholder="E.g., React Hooks Cheat Sheet"
@@ -1030,17 +1035,19 @@ const ApproveRequestModal: React.FC<ApproveRequestModalProps> = ({ visible, requ
           </View>
           <Text style={styles.approveModalSubtitle}>Review request: {request.title}</Text>
           
-          <Text style={styles.inputLabel}>Review Notes (Optional)</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Add any notes about this decision..."
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            placeholderTextColor={colors.textTertiary}
-          />
+          <View style={styles.textAreaContainer}>
+            <Text style={styles.inputLabel}>Review Notes (Optional)</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="Add any notes about this decision..."
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
 
           <View style={styles.approveModalActions}>
             <Button
@@ -1097,17 +1104,19 @@ const RejectRequestModal: React.FC<RejectRequestModalProps> = ({ visible, reques
           </View>
           <Text style={styles.approveModalSubtitle}>Review request: {request.title}</Text>
           
-          <Text style={[styles.inputLabel, { paddingHorizontal: spacing.md }]}>Review Notes (Optional)</Text>
-          <TextInput
-            style={styles.textArea}
-            placeholder="Add any notes about this decision..."
-            value={notes}
-            onChangeText={setNotes}
-            multiline
-            numberOfLines={4}
-            textAlignVertical="top"
-            placeholderTextColor={colors.textTertiary}
-          />
+          <View style={styles.textAreaContainer}>
+            <Text style={styles.inputLabel}>Review Notes (Optional)</Text>
+            <TextInput
+              style={styles.textArea}
+              placeholder="Add any notes about this decision..."
+              value={notes}
+              onChangeText={setNotes}
+              multiline
+              numberOfLines={4}
+              textAlignVertical="top"
+              placeholderTextColor={colors.textTertiary}
+            />
+          </View>
 
           <View style={styles.approveModalActions}>
             <Button
@@ -1243,6 +1252,7 @@ const styles = StyleSheet.create({
     borderColor: colors.border,
     marginBottom: spacing.md,
     gap: spacing.sm,
+    minHeight: 48,
   },
   searchInput: {
     flex: 1,
@@ -1340,6 +1350,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.border,
     gap: spacing.xs,
+    minHeight: 48,
   },
   filterButtonText: {
     fontSize: 14,
@@ -1699,7 +1710,6 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   inputLabel: {
-    paddingHorizontal: spacing.md,
     fontSize: 14,
     fontWeight: '600',
     color: colors.text,
@@ -1715,8 +1725,9 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md,
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.border,
     marginBottom: spacing.md,
+    minHeight: 48,
   },
   dropdownText: {
     fontSize: 14,
@@ -1750,7 +1761,7 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderLight,
   },
   dropdownListItemSelected: {
-    backgroundColor: colors.success + '10',
+    backgroundColor: colors.primary + '10',
   },
   dropdownListItemText: {
     fontSize: 14,
@@ -1759,20 +1770,22 @@ const styles = StyleSheet.create({
   },
   dropdownListItemTextSelected: {
     fontWeight: '600',
-    color: colors.success,
+    color: colors.primary,
   },
   textArea: {
     backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.borderLight,
+    borderColor: colors.border,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     fontSize: 14,
     color: colors.text,
-    marginHorizontal: spacing.md,
-    marginBottom: spacing.sm,
     minHeight: 100,
     textAlignVertical: 'top',
+  },
+  textAreaContainer: {
+    paddingHorizontal: spacing.md,
+    marginBottom: spacing.md,
   },
   rowInputs: {
     flexDirection: 'row',
@@ -1792,15 +1805,16 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   fileUploadBox: {
-    borderWidth: 2,
+    borderWidth: 1,
     borderStyle: 'dashed',
     borderColor: colors.border,
     borderRadius: borderRadius.md,
     padding: spacing.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.surface,
+    backgroundColor: colors.backgroundSecondary,
     marginBottom: spacing.sm,
+    minHeight: 120,
   },
   fileUploadText: {
     fontSize: 13,
@@ -1818,6 +1832,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     borderWidth: 1,
     borderColor: colors.border,
+    minHeight: 48,
   },
   fileInputLabel: {
     fontSize: 13,
@@ -1907,6 +1922,7 @@ const styles = StyleSheet.create({
     paddingTop: spacing.xs,
   },
   fulfillDescription: {
+    
     fontSize: 14,
     color: colors.textSecondary,
     padding: spacing.lg,
