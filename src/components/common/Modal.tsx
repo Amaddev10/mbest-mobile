@@ -44,7 +44,7 @@ export const Modal: React.FC<ModalProps> = ({
   const { height: screenHeight } = Dimensions.get('window');
 
   const modalHeight =
-    maxHeight != null ? maxHeight : Math.floor(screenHeight * 0.40);
+    maxHeight != null ? maxHeight : Math.floor(screenHeight * 0.85);
 
   const safeBottomPadding = typeof insets.bottom === 'number' ? insets.bottom : 0;
 
@@ -102,6 +102,8 @@ export const Modal: React.FC<ModalProps> = ({
                   style={styles.content}
                   contentContainerStyle={styles.contentContainer}
                   showsVerticalScrollIndicator={false}
+                  keyboardShouldPersistTaps="handled"
+                  nestedScrollEnabled={true}
                 >
                   {children}
                 </ScrollView>
@@ -148,7 +150,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     ...shadows.lg,
     overflow: 'hidden',
-    maxHeight: '90%',
   },
   header: {
     flexDirection: 'row',

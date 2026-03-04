@@ -157,57 +157,65 @@ export const StudentDashboardScreen: React.FC = () => {
         <View style={styles.statsGrid}>
           <Card variant="elevated" style={[styles.statCard, styles.statCardPrimary]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statHeader}>
-                <Icon name="book" size={25} color={colors.textInverse} />
+              <View style={styles.statIconWrapper}>
+                <Icon name="book" size={22} color={colors.textInverse} />
+              </View>
+              <View style={styles.statInfo}>
                 <Text style={styles.statValue} numberOfLines={1}>
                   {dashboardData?.enrolled_classes || 0}
                 </Text>
+                <Text style={styles.statLabel} numberOfLines={2}>
+                  Enrolled Classes
+                </Text>
               </View>
-              <Text style={styles.statLabel} numberOfLines={2}>
-                Enrolled Classes
-              </Text>
             </View>
           </Card>
 
           <Card variant="elevated" style={[styles.statCard, styles.statCardWarning]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statHeader}>
+              <View style={styles.statIconWrapper}>
                 <Icon name="file-text" size={20} color={colors.textInverse} />
+              </View>
+              <View style={styles.statInfo}>
                 <Text style={styles.statValue} numberOfLines={1}>
                   {dashboardData?.assignments_due || 0}
                 </Text>
+                <Text style={styles.statLabel} numberOfLines={2}>
+                  Assignments Due
+                </Text>
               </View>
-              <Text style={styles.statLabel} numberOfLines={2}>
-                Assignments Due
-              </Text>
             </View>
           </Card>
 
           <Card variant="elevated" style={[styles.statCard, styles.statCardSuccess]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statHeader}>
+              <View style={styles.statIconWrapper}>
                 <Icon name="check-circle" size={20} color={colors.textInverse} />
+              </View>
+              <View style={styles.statInfo}>
                 <Text style={styles.statValue} numberOfLines={1}>
                   {dashboardData?.completed_assignments || 0}
                 </Text>
+                <Text style={styles.statLabel} numberOfLines={2}>
+                  Completed
+                </Text>
               </View>
-              <Text style={styles.statLabel} numberOfLines={2}>
-                Completed
-              </Text>
             </View>
           </Card>
 
           <Card variant="elevated" style={[styles.statCard, styles.statCardSecondary]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statHeader}>
+              <View style={styles.statIconWrapper}>
                 <Icon name="star" size={20} color={colors.textInverse} />
+              </View>
+              <View style={styles.statInfo}>
                 <Text style={styles.statValue} numberOfLines={1}>
                   {overallGrade}%
                 </Text>
+                <Text style={styles.statLabel} numberOfLines={2}>
+                  Overall Grade
+                </Text>
               </View>
-              <Text style={styles.statLabel} numberOfLines={2}>
-                Overall Grade
-              </Text>
             </View>
           </Card>
         </View>
@@ -465,9 +473,9 @@ const styles = StyleSheet.create({
   },
   statCard: {
     width: '47%',
-    padding: spacing.sm,
-    minHeight: 80,
-    maxWidth: '60%',
+    padding: spacing.md,
+    minHeight: 90,
+    borderRadius: borderRadius.xl,
   },
   statCardPrimary: {
     backgroundColor: colors.primary,
@@ -482,35 +490,36 @@ const styles = StyleSheet.create({
     backgroundColor: colors.secondary,
   },
   statCardContent: {
+    flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    flex: 1,
-    width: '100%',
+    justifyContent: 'flex-start',
+    gap: spacing.md,
   },
-  statHeader: {
-    alignItems: 'center',
+  statIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(255,255,255,0.2)',
     justifyContent: 'center',
-    gap: spacing.xs,
-    marginBottom: spacing.xs / 2,
-    width: '100%',
+    alignItems: 'center',
+  },
+  statInfo: {
+    flex: 1,
   },
   statValue: {
-    fontSize: 25,
+    fontSize: 24,
     fontWeight: '700',
     color: colors.textInverse,
-    lineHeight: 22,
+    lineHeight: 26,
     includeFontPadding: false,
-    flex: 1,
   },
   statLabel: {
-    fontSize: 14,
-    fontWeight: '600',
+    fontSize: 13,
+    fontWeight: '500',
     color: colors.textInverse,
     opacity: 0.95,
-    textAlign: 'center',
-    lineHeight: 14,
+    lineHeight: 18,
     includeFontPadding: false,
-    maxWidth: '100%',
   },
   section: {
     marginBottom: spacing.xl,

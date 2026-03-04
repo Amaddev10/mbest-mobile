@@ -3,8 +3,10 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { launchImageLibrary } from 'react-native-image-picker';
+import { pick, types } from '@react-native-documents/picker';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Input } from './Input';
@@ -39,7 +41,7 @@ interface AskQuestionModalProps {
   onClose: () => void;
   assignmentId: number | null;
   assignment?: Assignment | null;
-  onSend: (question: { subject: string; priority: string; category: string; message: string }) => void;
+  onSend: (question: { subject: string; priority: string; category: string; message: string; attachments?: any[] }) => void;
 }
 
 const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'];
@@ -63,6 +65,7 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
   const [category, setCategory] = useState('Assignment Help');
   const [message, setMessage] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
+  const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
   const { token } = useAuthStore();
 
   // Fetch assignment details if assignmentId is provided
@@ -86,21 +89,73 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
 
   if (!assignment) return null;
 
+  const handlePickFile = async () => {
+    try {
+      if (attachedFiles.length >= 3) {
+        Alert.alert('Limit Reached', 'You can attach maximum 3 files.');
+        return;
+      }
+
+      // Use DocumentPicker to allow all file types
+      const result = await pick({
+        type: [
+          types.images,      // jpg, png, gif, etc.
+          types.pdf,         // PDF files
+          types.doc,         // Word documents
+          types.docx,        // Word documents
+          types.ppt,         // PowerPoint
+          types.pptx,        // PowerPoint
+          types.xls,         // Excel
+          types.xlsx,        // Excel
+          types.plainText,   // Plain text
+        ],
+        allowMultiSelection: true,
+        maxFiles: 3 - attachedFiles.length,
+      });
+
+      if (result.length > 0) {
+        const newFiles = result.slice(0, 3 - attachedFiles.length);
+        setAttachedFiles([...attachedFiles, ...newFiles]);
+      }
+    } catch (err: any) {
+      // Check if user cancelled the picker
+      if (err?.code === 'DOCUMENT_PICKER_CANCELED' || err?.message?.includes('cancel')) {
+        return;
+      }
+      
+      // Only show error for actual errors
+      if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
+        Alert.alert('Error', 'Failed to pick file');
+        console.error('DocumentPicker Error:', err);
+      }
+    }
+  };
+
+  const removeAttachedFile = (index: number) => {
+    const newFiles = attachedFiles.filter((_, i) => i !== index);
+    setAttachedFiles(newFiles);
+  };
+
   const handleSend = () => {
     if (subject.trim() && message.trim()) {
-      onSend({ subject, priority, category, message });
+      onSend({ subject, priority, category, message, attachments: attachedFiles });
       // Reset form
       setSubject('');
       setPriority('Medium');
       setCategory('Assignment Help');
       setMessage('');
+      setAttachedFiles([]);
       onClose();
     }
   };
 
   return (
     <Modal visible={visible} onClose={onClose} title="Ask a Question">
-      <ScrollView showsVerticalScrollIndicator={false}>
+      <ScrollView 
+        showsVerticalScrollIndicator={false}
+        keyboardShouldPersistTaps="handled"
+        contentContainerStyle={styles.modalContent}
+      >
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <Icon name="message-circle" size={24} color={colors.primary} />
@@ -109,7 +164,7 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
 
         {/* Subtitle */}
         <Text style={styles.subtitle}>
-          Ask about: {assignment.title} • {assignment.class_model?.name || assignment.subject || assignment.class || 'General'} • {assignment.tutor?.user?.name || assignment.tutor_name || assignment.instructor || 'Instructor'}
+          Ask about: {(assignment as any)?.title || 'Untitled Assignment'} • {(assignment as any)?.class_model?.name || (assignment as any)?.subject || (assignment as any)?.class || 'General'} • {(assignment as any)?.tutor?.user?.name || (assignment as any)?.tutor_name || (assignment as any)?.instructor || 'Instructor'}
         </Text>
 
         {/* Subject Input */}
@@ -165,7 +220,7 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
           >
             <Text style={styles.categoryDropdownText}>{category}</Text>
             <Icon 
-              name={showCategoryDropdown ? 'chevron-up' : 'chevron-down'} 
+              name={showCategoryDropdown ? 'chevron-down' : 'chevron-down'} 
               size={20} 
               color={colors.textSecondary} 
             />
@@ -206,12 +261,35 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
         <View style={styles.attachmentsContainer}>
           <Text style={styles.label}>Attachments (Optional)</Text>
           <View style={styles.attachmentsRow}>
-            <TouchableOpacity style={styles.attachButton} activeOpacity={0.7}>
-              <Icon name="paperclip" size={18} color={colors.primary} />
+            <TouchableOpacity style={styles.attachButton} activeOpacity={0.7} onPress={handlePickFile}>
+              <Icon name="upload" size={18} color={colors.primary} />
               <Text style={styles.attachButtonText}>Attach Files</Text>
             </TouchableOpacity>
-            <Text style={styles.attachLimitText}>Max 3 files (PDF, DOC, images)</Text>
+            <Text style={styles.attachLimitText}>
+              {attachedFiles.length}/3 files attached
+            </Text>
           </View>
+          
+          {/* Attached Files List */}
+          {attachedFiles.length > 0 && (
+            <View style={styles.attachedFilesList}>
+              {attachedFiles.map((file, index) => (
+                <View key={index} style={styles.attachedFileItem}>
+                  <Icon name="file" size={16} color={colors.primary} />
+                  <Text style={styles.attachedFileName} numberOfLines={1}>
+                    {file.name || `File ${index + 1}`}
+                  </Text>
+                  <TouchableOpacity
+                    style={styles.removeFileButton}
+                    onPress={() => removeAttachedFile(index)}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="x" size={14} color={colors.error} />
+                  </TouchableOpacity>
+                </View>
+              ))}
+            </View>
+          )}
         </View>
 
         {/* Message Input */}
@@ -247,6 +325,9 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  modalContent: {
+    paddingBottom: spacing.lg,
+  },
   headerSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -417,6 +498,35 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     minWidth: 150,
+  },
+  attachedFilesList: {
+    marginTop: spacing.md,
+    gap: spacing.sm,
+  },
+  attachedFileItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.background,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: borderRadius.md,
+    padding: spacing.sm,
+    gap: spacing.sm,
+  },
+  attachedFileName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  removeFileButton: {
+    width: 24,
+    height: 24,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.errorLight + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   loadingContainer: {
     padding: spacing.xl,

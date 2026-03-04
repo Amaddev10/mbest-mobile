@@ -64,7 +64,7 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
     );
   }
 
-  if (!assignment || !assignment.due_date) {
+  if (!assignment || !(assignment as any).due_date) {
     return (
       <Modal visible={visible} onClose={onClose} title="Submit Assignment">
         <View style={styles.errorContainer}>
@@ -76,7 +76,7 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
     );
   }
 
-  const dueDate = new Date(assignment.due_date);
+  const dueDate = new Date((assignment as any).due_date);
   const now = new Date();
   const isOverdue = dueDate < now;
   const daysOverdue = isOverdue
@@ -94,9 +94,9 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
     <Modal visible={visible} onClose={onClose} title="Submit Assignment">
       {/* Assignment Info Card */}
       <View style={styles.infoCard}>
-        <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-        {assignment.description && (
-          <Text style={styles.assignmentDescription}>{assignment.description}</Text>
+        <Text style={styles.assignmentTitle}>{(assignment as any)?.title || 'Untitled Assignment'}</Text>
+        {(assignment as any)?.description && (
+          <Text style={styles.assignmentDescription}>{(assignment as any).description}</Text>
         )}
         <View style={styles.detailsRow}>
           <Text style={styles.detailText}>
@@ -106,8 +106,8 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
               year: 'numeric' 
             })}
           </Text>
-          {(assignment.max_points || (assignment as any).max_points) && (
-            <Text style={styles.detailText}>Points: {assignment.max_points || (assignment as any).max_points}</Text>
+          {(assignment as any)?.max_points && (
+            <Text style={styles.detailText}>Points: {(assignment as any).max_points}</Text>
           )}
         </View>
         {isOverdue && (
@@ -236,10 +236,12 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   cancelButton: {
-    flex: 1,
+    flex: 0.8,
+    paddingHorizontal: spacing.xs,
   },
   submitButton: {
-    flex: 1,
+    flex: 1.2,
+    paddingHorizontal: spacing.xs,
   },
   loadingContainer: {
     padding: spacing.xl,

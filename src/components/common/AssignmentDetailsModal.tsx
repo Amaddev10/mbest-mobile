@@ -107,36 +107,52 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
         {/* Key Information Grid */}
         <View style={styles.infoGrid}>
           <View style={styles.infoItem}>
-            <Icon name="user" size={20} color={colors.primary} />
-            <Text style={styles.infoLabel}>Instructor</Text>
-            <Text style={styles.infoValue}>
-              {assignment.tutor?.user?.name || assignment.class_model?.tutor?.user?.name || 'N/A'}
-            </Text>
+            <View style={styles.infoIconContainer}>
+              <Icon name="user" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Instructor</Text>
+              <Text style={styles.infoValue}>
+                {assignment.tutor?.user?.name || assignment.class_model?.tutor?.user?.name || 'N/A'}
+              </Text>
+            </View>
           </View>
           <View style={styles.infoItem}>
-            <Icon name="book" size={20} color={colors.primary} />
-            <Text style={styles.infoLabel}>Class</Text>
-            <Text style={styles.infoValue}>
-              {assignment.class_model?.name || assignment.class?.name || assignment.class?.subject || 'N/A'}
-            </Text>
+            <View style={styles.infoIconContainer}>
+              <Icon name="book" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Class</Text>
+              <Text style={styles.infoValue}>
+                {assignment.class_model?.name || assignment.class?.name || assignment.class?.subject || 'N/A'}
+              </Text>
+            </View>
           </View>
           <View style={styles.infoItem}>
-            <Icon name="calendar" size={20} color={colors.primary} />
-            <Text style={styles.infoLabel}>Due Date</Text>
-            <Text style={styles.infoValue}>
-              {dueDate.toLocaleDateString('en-US', { 
-                month: '2-digit', 
-                day: '2-digit', 
-                year: 'numeric' 
-              })}
-            </Text>
+            <View style={styles.infoIconContainer}>
+              <Icon name="calendar" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Due Date</Text>
+              <Text style={styles.infoValue}>
+                {dueDate.toLocaleDateString('en-US', { 
+                  month: '2-digit', 
+                  day: '2-digit', 
+                  year: 'numeric' 
+                })}
+              </Text>
+            </View>
           </View>
           <View style={styles.infoItem}>
-            <Icon name="target" size={20} color={colors.primary} />
-            <Text style={styles.infoLabel}>Points</Text>
-            <Text style={styles.infoValue}>
-              {assignment.max_points || 0} points
-            </Text>
+            <View style={styles.infoIconContainer}>
+              <Icon name="target" size={20} color={colors.primary} />
+            </View>
+            <View style={styles.infoTextContainer}>
+              <Text style={styles.infoLabel}>Points</Text>
+              <Text style={styles.infoValue}>
+                {assignment.max_points || 0} points
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -276,13 +292,25 @@ const styles = StyleSheet.create({
   },
   infoItem: {
     width: '48%',
-    alignItems: 'flex-start',
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+  },
+  infoIconContainer: {
+    width: 40,
+    height: 40,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.primaryLight + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  infoTextContainer: {
+    flex: 1,
   },
   infoLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
-    marginTop: spacing.xs,
     marginBottom: spacing.xs / 2,
     includeFontPadding: false,
   },

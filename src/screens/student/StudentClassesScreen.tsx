@@ -16,6 +16,7 @@ import { Card } from '../../components/common/Card';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { Button } from '../../components/common/Button';
 import { Header } from '../../components/common/Header';
+import { Icon } from '../../components/common/Icon';
 
 export const StudentClassesScreen: React.FC = () => {
   const { token } = useAuthStore();
@@ -46,7 +47,7 @@ export const StudentClassesScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>⚠️</Text>
+          <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Error loading classes</Text>
           <Button title="Retry" onPress={() => refetch()} variant="primary" style={styles.retryButton} />
         </View>
@@ -55,7 +56,8 @@ export const StudentClassesScreen: React.FC = () => {
   }
 
   // Handle nested API response structures (data.data.data for paginated responses)
-  const classes = data?.data?.data || data?.data || data || [];
+  const rawClasses = (data as any)?.data?.data || (data as any)?.data || (Array.isArray(data) ? data : []) || [];
+  const classes = Array.isArray(rawClasses) ? rawClasses : [];
 
   return (
     <View style={styles.container}>
@@ -72,7 +74,7 @@ export const StudentClassesScreen: React.FC = () => {
           <Card variant="elevated" style={styles.classCard}>
             <View style={styles.classCardHeader}>
               <View style={styles.classIconContainer}>
-                <Text style={styles.classIcon}>📚</Text>
+                <Icon name="book" size={28} color={colors.textInverse} />
               </View>
               <View style={styles.classInfo}>
                 <Text style={styles.className} numberOfLines={1}>
@@ -91,14 +93,14 @@ export const StudentClassesScreen: React.FC = () => {
             
             <View style={styles.classDetails}>
               <View style={styles.detailRow}>
-                <Text style={styles.detailLabel}>👨‍🏫</Text>
+                <Icon name="user" size={16} color={colors.textSecondary} style={styles.detailIcon} />
                 <Text style={styles.detailText} numberOfLines={1}>
                   {item.tutor?.user?.name || item.tutor_name || 'Tutor TBD'}
                 </Text>
               </View>
               {(item.start_date || item.schedule) && (
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>📅</Text>
+                  <Icon name="calendar" size={16} color={colors.textSecondary} style={styles.detailIcon} />
                   <Text style={styles.detailText} numberOfLines={1}>
                     {item.start_date 
                       ? new Date(item.start_date).toLocaleDateString('en-US', { 
@@ -112,7 +114,7 @@ export const StudentClassesScreen: React.FC = () => {
               )}
               {item.enrolled && item.capacity && (
                 <View style={styles.detailRow}>
-                  <Text style={styles.detailLabel}>👥</Text>
+                  <Icon name="users" size={16} color={colors.textSecondary} style={styles.detailIcon} />
                   <Text style={styles.detailText} numberOfLines={1}>
                     {item.enrolled}/{item.capacity} enrolled
                   </Text>
@@ -132,7 +134,7 @@ export const StudentClassesScreen: React.FC = () => {
         )}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Text style={styles.emptyIcon}>📖</Text>
+            <Icon name="book" size={72} color={colors.textTertiary} />
             <Text style={styles.emptyTitle}>No Classes Available</Text>
             <Text style={styles.emptyText}>
               There are no classes available at the moment.{'\n'}
@@ -178,9 +180,6 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
     ...shadows.sm,
   },
-  classIcon: {
-    fontSize: 28,
-  },
   classInfo: {
     flex: 1,
   },
@@ -216,8 +215,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  detailLabel: {
-    fontSize: 18,
+  detailIcon: {
     marginRight: spacing.sm,
   },
   detailText: {
@@ -234,10 +232,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
-  },
-  errorIcon: {
-    fontSize: 64,
-    marginBottom: spacing.lg,
+    gap: spacing.lg,
   },
   errorText: {
     ...textStyles.h4,
@@ -255,11 +250,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     paddingVertical: spacing['4xl'],
     paddingHorizontal: spacing.xl,
-  },
-  emptyIcon: {
-    fontSize: 80,
-    marginBottom: spacing.xl,
-    opacity: 0.5,
   },
   emptyTitle: {
     ...textStyles.h3,

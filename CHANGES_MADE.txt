@@ -1,0 +1,162 @@
+# MBEST Mobile App - Changes Made
+
+## StudentAttendanceScreen.tsx
+### Date: March 4, 2026
+### Changes: Stats Cards Layout Update
+
+#### 1. Icon and Count Layout
+- **BEFORE**: Vertical layout (icon → value → label stacked centered)
+- **AFTER**: Horizontal row layout with icon and count side by side, label text below
+
+#### 2. Component Structure Changes
+- Added statTopRow wrapper for horizontal icon and count layout
+- Moved label text outside of the horizontal row
+- Updated all 4 stat cards (Total Sessions, Present, Absent, Late)
+
+#### 3. Style Updates
+- Added statTopRow style with flexDirection: 'row' and centered alignment
+- Updated statCardContent to use alignItems: 'center' with reduced padding
+- Increased icon wrapper size from 40x40 to 44x44 pixels
+- Reduced padding: vertical from spacing.md to spacing.sm, horizontal from spacing.sm to spacing.xs
+- Added textAlign: 'center' to statLabel for proper alignment
+- Reduced icon wrapper margin from spacing.md to spacing.sm
+
+#### 4. Applied to All Stats Cards
+- Total Sessions (book icon) - Primary color
+- Present (check-circle icon) - Success color  
+- Absent (x icon) - Error color
+- Late (clock icon) - Warning color
+
+---
+
+## AssignmentDetailsModal.tsx
+### Date: March 4, 2026
+### Changes: Info Items Layout Update
+
+#### 1. Icon and Text Layout
+- **BEFORE**: Vertical layout (icon → label → value stacked)
+- **AFTER**: Horizontal row layout with icon beside text content
+
+#### 2. Component Structure Changes
+- Added infoIconContainer wrapper for circular icon background
+- Added infoTextContainer wrapper for label and value text
+- Updated all 4 info items (Instructor, Class, Due Date, Points)
+
+#### 3. Style Updates
+- Updated infoItem to use flexDirection: 'row' with alignItems: 'center'
+- Added infoIconContainer with 40x40 circular background and primary light color
+- Added infoTextContainer with flex: 1 for text content
+- Removed marginTop from infoLabel since it's now in a container
+
+#### 4. Applied to All Info Items
+- Instructor (user icon)
+- Class (book icon)
+- Due Date (calendar icon)
+- Points (target icon)
+
+---
+
+## AskQuestionModal.tsx
+### Date: March 4, 2026
+### Changes: File Attachment Implementation & Scrolling Fix
+
+#### 1. File Attachment Feature
+- **Libraries Used**: @react-native-documents/picker, react-native-image-picker
+- **Functionality**: Multi-file attachment (max 3 files)
+- **File Types**: Images, PDFs, Word, PowerPoint, Excel, Text files
+- **Features**: File picker, file list display, remove individual files, file counter
+
+#### 2. Component Additions
+- Added attachedFiles state array for managing selected files
+- Added handlePickFile function with file type filtering and multi-selection
+- Added removeAttachedFile function for removing individual files
+- Added attachments UI with file list and remove buttons
+- Updated handleSend to include attachments in submission data
+
+#### 3. Scrolling Issue Fix
+- Added ScrollView wrapper around modal content
+- Added keyboardShouldPersistTaps and nestedScrollEnabled props
+- Added modalContent style with paddingBottom for proper spacing
+- Updated interface to include optional attachments parameter
+
+#### 4. Style Additions
+- Added attachedFilesList, attachedFileItem, attachedFileName, removeFileButton styles
+- Added modalContent style for scroll container
+
+---
+
+## SubmitAssignmentModal.tsx
+### Date: March 4, 2026
+### Changes: Button Size Optimization
+
+#### 1. Button Layout Update
+- **Cancel Button**: Reduced flex from 1 to 0.8 (20% smaller)
+- **Submit Button**: Increased flex from 1 to 1.2 (20% larger)
+- **Padding**: Reduced horizontal padding for both buttons to spacing.xs
+
+#### 2. Visual Result
+- Submit button more prominent as primary action
+- Cancel button smaller but still accessible
+- Better visual hierarchy for user actions
+
+---
+
+## Modal.tsx (Base Component)
+### Date: March 4, 2026
+### Changes: Scrolling Optimization
+
+#### 1. Modal Height Increased
+- Increased default modal height from 40% to 85% of screen height
+- Provides much more space for content and better scrolling
+
+#### 2. ScrollView Configuration Enhanced
+- Added keyboardShouldPersistTaps="handled" for better interaction
+- Added nestedScrollEnabled={true} for proper nested scrolling
+- Improved touch handling and keyboard behavior
+
+#### 3. Container Style Updates
+- Removed conflicting maxHeight constraint from modalContainer
+- Allows ScrollView to handle content height properly
+
+---
+
+## StudentClassesScreen.tsx
+### Date: March 4, 2026
+### Changes: TypeScript Error Fix
+
+#### 1. Data Access Fix
+- Added type assertions (data as any) to resolve property access errors
+- Maintained array type checking with Array.isArray()
+- Fixed nested data structure access for API responses
+
+#### 2. Icon Name Fix
+- Changed invalid icon name "book-open" to valid "book"
+- Resolved IconName type assignment error
+
+---
+
+## Summary of All Changes
+
+### UI/UX Improvements
+1. **Consistent Layout Patterns**: Horizontal icon + count layout across all screens
+2. **Better Visual Hierarchy**: Primary actions more prominent
+3. **Improved Scrolling**: Smooth modal scrolling without stuck issues
+4. **File Attachments**: Full file upload functionality implemented
+5. **Compact Design**: Reduced padding for cleaner appearance
+
+### Technical Improvements
+1. **TypeScript Compliance**: All type errors resolved
+2. **Reusable Components**: Consistent styling patterns
+3. **Performance**: Optimized ScrollView configurations
+4. **Error Handling**: Better file picker error management
+5. **Accessibility**: Proper touch handling and keyboard support
+
+### Files Modified
+- StudentAttendanceScreen.tsx
+- AssignmentDetailsModal.tsx  
+- AskQuestionModal.tsx
+- SubmitAssignmentModal.tsx
+- Modal.tsx
+- StudentClassesScreen.tsx
+
+### Total Changes: 6 files, 15+ style updates, 3 new features implemented

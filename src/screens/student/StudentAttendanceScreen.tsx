@@ -15,6 +15,7 @@ import { Card } from '../../components/common/Card';
 import { LoadingSpinner } from '../../components/common/LoadingSpinner';
 import { Button } from '../../components/common/Button';
 import { Header } from '../../components/common/Header';
+import { Icon } from '../../components/common/Icon';
 
 export const StudentAttendanceScreen: React.FC = () => {
   const { token } = useAuthStore();
@@ -33,7 +34,7 @@ export const StudentAttendanceScreen: React.FC = () => {
     return (
       <View style={styles.container}>
         <View style={styles.errorContainer}>
-          <Text style={styles.errorIcon}>⚠️</Text>
+          <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Error loading attendance</Text>
           <Button title="Retry" onPress={() => refetch()} variant="primary" style={styles.retryButton} />
         </View>
@@ -42,7 +43,8 @@ export const StudentAttendanceScreen: React.FC = () => {
   }
 
   // Handle nested API response structures (data.data.data for paginated responses)
-  const records = data?.data?.data || data?.data || data || [];
+  const rawRecords = data?.data?.data || data?.data || data || [];
+  const records = Array.isArray(rawRecords) ? rawRecords : [];
   
   // Calculate stats from records if not provided
   const stats = records.length > 0 ? {
@@ -81,37 +83,45 @@ export const StudentAttendanceScreen: React.FC = () => {
         <View style={styles.statsGrid}>
           <Card variant="elevated" style={[styles.statCard, styles.statCardPrimary]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statIconContainer}>
-                <Text style={styles.statIcon}>📚</Text>
+              <View style={styles.statTopRow}>
+                <View style={styles.statIconWrapper}>
+                  <Icon name="book" size={22} color={colors.textInverse} />
+                </View>
+                <Text style={styles.statValue}>{stats.total_sessions || 0}</Text>
               </View>
-              <Text style={styles.statValue}>{stats.total_sessions || 0}</Text>
               <Text style={styles.statLabel}>Total Sessions</Text>
             </View>
           </Card>
           <Card variant="elevated" style={[styles.statCard, styles.statCardSuccess]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statIconContainer}>
-                <Text style={styles.statIcon}>✅</Text>
+              <View style={styles.statTopRow}>
+                <View style={styles.statIconWrapper}>
+                  <Icon name="check-circle" size={22} color={colors.textInverse} />
+                </View>
+                <Text style={styles.statValue}>{stats.present_count || 0}</Text>
               </View>
-              <Text style={styles.statValue}>{stats.present_count || 0}</Text>
               <Text style={styles.statLabel}>Present</Text>
             </View>
           </Card>
           <Card variant="elevated" style={[styles.statCard, styles.statCardError]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statIconContainer}>
-                <Text style={styles.statIcon}>❌</Text>
+              <View style={styles.statTopRow}>
+                <View style={styles.statIconWrapper}>
+                  <Icon name="x" size={22} color={colors.textInverse} />
+                </View>
+                <Text style={styles.statValue}>{stats.absent_count || 0}</Text>
               </View>
-              <Text style={styles.statValue}>{stats.absent_count || 0}</Text>
               <Text style={styles.statLabel}>Absent</Text>
             </View>
           </Card>
           <Card variant="elevated" style={[styles.statCard, styles.statCardWarning]}>
             <View style={styles.statCardContent}>
-              <View style={styles.statIconContainer}>
-                <Text style={styles.statIcon}>⏰</Text>
+              <View style={styles.statTopRow}>
+                <View style={styles.statIconWrapper}>
+                  <Icon name="clock" size={22} color={colors.textInverse} />
+                </View>
+                <Text style={styles.statValue}>{stats.late_count || 0}</Text>
               </View>
-              <Text style={styles.statValue}>{stats.late_count || 0}</Text>
               <Text style={styles.statLabel}>Late</Text>
             </View>
           </Card>
@@ -123,7 +133,7 @@ export const StudentAttendanceScreen: React.FC = () => {
         <Card variant="elevated" style={styles.rateCard}>
           <View style={styles.rateCardContent}>
             <View style={styles.rateIconContainer}>
-              <Text style={styles.rateIcon}>📊</Text>
+              <Icon name="bar-chart" size={32} color={colors.textInverse} />
             </View>
             <View style={styles.rateInfo}>
               <Text style={styles.rateLabel}>Attendance Rate</Text>
@@ -160,9 +170,11 @@ export const StudentAttendanceScreen: React.FC = () => {
                     isAbsent && styles.recordIconAbsent,
                     isExcused && styles.recordIconExcused,
                   ]}>
-                    <Text style={styles.recordIcon}>
-                      {isPresent ? '✅' : isLate ? '⏰' : isAbsent ? '❌' : '📝'}
-                    </Text>
+                    <Icon 
+                      name={isPresent ? 'check-circle' : isLate ? 'clock' : isAbsent ? 'x' : 'file-text'} 
+                      size={24} 
+                      color={colors.textInverse} 
+                    />
                   </View>
                   <View style={styles.recordInfo}>
                     <Text style={styles.recordDate} numberOfLines={1}>
@@ -177,9 +189,12 @@ export const StudentAttendanceScreen: React.FC = () => {
                       {record.subject || 'General'}
                     </Text>
                     {record.teacher?.user?.name && (
-                      <Text style={styles.recordTeacher} numberOfLines={1}>
-                        👨‍🏫 {record.teacher.user.name}
-                      </Text>
+                      <View style={styles.teacherContainer}>
+                        <Icon name="user" size={12} color={colors.textSecondary} />
+                        <Text style={styles.recordTeacher} numberOfLines={1}>
+                          {record.teacher.user.name}
+                        </Text>
+                      </View>
                     )}
                   </View>
                 </View>
@@ -197,7 +212,7 @@ export const StudentAttendanceScreen: React.FC = () => {
                   </View>
                   {(record.start_time || record.end_time) && (
                     <View style={styles.timeContainer}>
-                      <Text style={styles.timeLabel}>🕐</Text>
+                      <Icon name="clock" size={14} color={colors.textSecondary} />
                       <Text style={styles.recordTime} numberOfLines={1}>
                         {record.start_time?.substring(0, 5) || ''}
                         {record.end_time ? ` - ${record.end_time.substring(0, 5)}` : ''}
@@ -207,7 +222,10 @@ export const StudentAttendanceScreen: React.FC = () => {
                 </View>
                 {record.attendance_notes && (
                   <View style={styles.notesContainer}>
-                    <Text style={styles.notesLabel}>💬 Notes:</Text>
+                    <View style={styles.notesHeader}>
+                      <Icon name="message-circle" size={14} color={colors.textSecondary} />
+                      <Text style={styles.notesLabel}>Notes:</Text>
+                    </View>
                     <Text style={styles.notesText} numberOfLines={2} ellipsizeMode="tail">
                       {record.attendance_notes}
                     </Text>
@@ -219,7 +237,7 @@ export const StudentAttendanceScreen: React.FC = () => {
         ) : (
           <Card variant="outlined" style={styles.emptyCard}>
             <View style={styles.emptyContainer}>
-              <Text style={styles.emptyIcon}>📋</Text>
+              <Icon name="clipboard" size={64} color={colors.textTertiary} />
               <Text style={styles.emptyTitle}>No Attendance Records</Text>
               <Text style={styles.emptyText}>
                 Your attendance records will appear here once classes begin.
@@ -271,24 +289,37 @@ const styles = StyleSheet.create({
   },
   statCardContent: {
     alignItems: 'center',
+    paddingVertical: spacing.sm,
+    paddingHorizontal: spacing.xs,
   },
-  statIconContainer: {
+  statTopRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
     marginBottom: spacing.sm,
   },
-  statIcon: {
-    fontSize: 32,
+  statIconWrapper: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.full,
+    backgroundColor: 'rgba(255, 255, 255, 0.2)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    marginRight: spacing.sm,
   },
   statValue: {
-    ...textStyles.h2,
+    ...textStyles.h3,
     color: colors.textInverse,
-    marginBottom: spacing.xs,
+    fontWeight: '700',
+    includeFontPadding: false,
   },
   statLabel: {
     ...textStyles.caption,
     color: colors.textInverse,
     opacity: 0.9,
+    fontWeight: '500',
     textAlign: 'center',
-    fontWeight: '600',
+    includeFontPadding: false,
   },
   rateCard: {
     marginBottom: spacing.xl,
@@ -307,9 +338,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginRight: spacing.lg,
     ...shadows.md,
-  },
-  rateIcon: {
-    fontSize: 36,
   },
   rateInfo: {
     flex: 1,
@@ -365,9 +393,6 @@ const styles = StyleSheet.create({
   recordIconAbsent: {
     backgroundColor: colors.errorLight,
   },
-  recordIcon: {
-    fontSize: 24,
-  },
   recordInfo: {
     flex: 1,
   },
@@ -383,6 +408,11 @@ const styles = StyleSheet.create({
     lineHeight: 20,
     includeFontPadding: false,
     marginBottom: spacing.xs,
+  },
+  teacherContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
   },
   recordTeacher: {
     fontSize: 12,
@@ -429,10 +459,7 @@ const styles = StyleSheet.create({
   timeContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-  },
-  timeLabel: {
-    fontSize: 14,
+    gap: spacing.xs / 2,
   },
   recordTime: {
     fontSize: 13,
@@ -447,11 +474,16 @@ const styles = StyleSheet.create({
     borderTopWidth: 1,
     borderTopColor: colors.borderLight,
   },
+  notesHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
+    marginBottom: spacing.xs,
+  },
   notesLabel: {
     fontSize: 12,
     fontWeight: '600',
     color: colors.textSecondary,
-    marginBottom: spacing.xs,
     lineHeight: 16,
     includeFontPadding: false,
   },
@@ -467,10 +499,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
-  },
-  errorIcon: {
-    fontSize: 64,
-    marginBottom: spacing.lg,
+    gap: spacing.lg,
   },
   errorText: {
     ...textStyles.h4,
@@ -486,11 +515,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-  },
-  emptyIcon: {
-    fontSize: 80,
-    marginBottom: spacing.xl,
-    opacity: 0.5,
+    gap: spacing.md,
   },
   emptyTitle: {
     ...textStyles.h3,
