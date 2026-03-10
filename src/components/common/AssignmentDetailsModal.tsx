@@ -9,7 +9,10 @@ import { Modal } from './Modal';
 import { Button } from './Button';
 import { Icon } from './Icon';
 import { LoadingSpinner } from './LoadingSpinner';
-import { studentService, type AssignmentDetails } from '../../services/api/student';
+import {
+  studentService,
+  type AssignmentDetails,
+} from '../../services/api/student';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius, shadows } from '../../constants/spacing';
@@ -20,6 +23,8 @@ interface AssignmentDetailsModalProps {
   onClose: () => void;
   assignmentId: number | null;
   onStartAssignment?: () => void;
+  onViewSubmission?: () => void;
+  onEditSubmission?: () => void;
 }
 
 export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
@@ -27,6 +32,8 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
   onClose,
   assignmentId,
   onStartAssignment,
+  onViewSubmission,
+  onEditSubmission,
 }) => {
   const { token } = useAuthStore();
 
@@ -40,7 +47,12 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
 
   if (isLoading) {
     return (
-      <Modal visible={visible} onClose={onClose} title="Assignment Details" maxHeight={600}>
+      <Modal
+        visible={visible}
+        onClose={onClose}
+        title="Assignment Details"
+        maxHeight={600}
+      >
         <View style={styles.loadingContainer}>
           <LoadingSpinner />
         </View>
@@ -50,11 +62,16 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
 
   if (error || !data) {
     return (
-      <Modal visible={visible} onClose={onClose} title="Assignment Details" maxHeight={600}>
+      <Modal visible={visible} onClose={onClose} title="Assignment Details">
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Error loading assignment details</Text>
-          <Button title="Close" onPress={onClose} variant="outline" style={styles.closeButton} />
+          <Button
+            title="Close"
+            onPress={onClose}
+            variant="outline"
+            style={styles.closeButton}
+          />
         </View>
       </Modal>
     );
@@ -64,11 +81,16 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
 
   if (!assignment || !assignment.due_date) {
     return (
-      <Modal visible={visible} onClose={onClose} title="Assignment Details" maxHeight={600}>
+      <Modal visible={visible} onClose={onClose} title="Assignment Details">
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Assignment data not available</Text>
-          <Button title="Close" onPress={onClose} variant="outline" style={styles.closeButton} />
+          <Button
+            title="Close"
+            onPress={onClose}
+            variant="outline"
+            style={styles.closeButton}
+          />
         </View>
       </Modal>
     );
@@ -76,13 +98,29 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
 
   const dueDate = new Date(assignment.due_date);
   const now = new Date();
-  const daysUntilDue = Math.ceil((dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
+  const daysUntilDue = Math.ceil(
+    (dueDate.getTime() - now.getTime()) / (1000 * 60 * 60 * 24),
+  );
   const isDueSoon = daysUntilDue >= 0 && daysUntilDue <= 1;
-  const hasHighPriority = assignment.priority === 'high' || assignment.priority === 'urgent' || assignment.priority === 'High' || assignment.priority === 'Urgent';
+  const hasHighPriority =
+    assignment.priority === 'high' ||
+    assignment.priority === 'urgent' ||
+    assignment.priority === 'High' ||
+    assignment.priority === 'Urgent';
+
+  const submissions = (assignment as any).submissions || [];
+  const hasSubmission = submissions.length > 0;
+  const latestSubmission = hasSubmission ? submissions[0] : null;
+  const submittedDate = latestSubmission?.submitted_at
+    ? new Date(latestSubmission.submitted_at)
+    : null;
 
   return (
-    <Modal visible={visible} onClose={onClose} title="Assignment Details" maxHeight={600}>
-      <ScrollView showsVerticalScrollIndicator={false}>
+    <Modal visible={visible} onClose={onClose} title="Assignment Details">
+      <ScrollView
+        style={styles.scrollView}
+        contentContainerStyle={styles.scrollViewContent}
+      >
         {/* Header with Icon */}
         <View style={styles.headerSection}>
           <Icon name="file-text" size={24} color={colors.primary} />
@@ -113,7 +151,9 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Instructor</Text>
               <Text style={styles.infoValue}>
-                {assignment.tutor?.user?.name || assignment.class_model?.tutor?.user?.name || 'N/A'}
+                {assignment.tutor?.user?.name ||
+                  assignment.class_model?.tutor?.user?.name ||
+                  'N/A'}
               </Text>
             </View>
           </View>
@@ -124,7 +164,10 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Class</Text>
               <Text style={styles.infoValue}>
-                {assignment.class_model?.name || assignment.class?.name || assignment.class?.subject || 'N/A'}
+                {assignment.class_model?.name ||
+                  assignment.class?.name ||
+                  assignment.class?.subject ||
+                  'N/A'}
               </Text>
             </View>
           </View>
@@ -135,10 +178,10 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
             <View style={styles.infoTextContainer}>
               <Text style={styles.infoLabel}>Due Date</Text>
               <Text style={styles.infoValue}>
-                {dueDate.toLocaleDateString('en-US', { 
-                  month: '2-digit', 
-                  day: '2-digit', 
-                  year: 'numeric' 
+                {dueDate.toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric',
                 })}
               </Text>
             </View>
@@ -162,16 +205,18 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
             <Icon name="clock" size={20} color={colors.primary} />
             <Text style={styles.timeRemainingLabel}>Time Remaining</Text>
           </View>
-          <Text style={[
-            styles.timeRemainingText,
-            isDueSoon && styles.timeRemainingWarning
-          ]}>
-            {daysUntilDue < 0 
-              ? 'Overdue' 
-              : daysUntilDue === 0 
-              ? 'Due today' 
-              : daysUntilDue === 1 
-              ? 'Due tomorrow' 
+          <Text
+            style={[
+              styles.timeRemainingText,
+              isDueSoon && styles.timeRemainingWarning,
+            ]}
+          >
+            {daysUntilDue < 0
+              ? 'Overdue'
+              : daysUntilDue === 0
+              ? 'Due today'
+              : daysUntilDue === 1
+              ? 'Due tomorrow'
               : `Due in ${daysUntilDue} days`}
           </Text>
         </View>
@@ -183,13 +228,20 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
             <Text style={styles.requirementItem}>
               • Submit as {assignment.submission_type || 'text entry'}
             </Text>
-            {assignment.allowed_file_types && Array.isArray(assignment.allowed_file_types) && assignment.allowed_file_types.length > 0 && (
-              <Text style={styles.requirementItem}>
-                • Allowed file types: {assignment.allowed_file_types.join(', ')}
-              </Text>
-            )}
-            <Text style={styles.requirementItem}>• Original work required - no plagiarism</Text>
-            <Text style={styles.requirementItem}>• Follow proper formatting guidelines</Text>
+            {assignment.allowed_file_types &&
+              Array.isArray(assignment.allowed_file_types) &&
+              assignment.allowed_file_types.length > 0 && (
+                <Text style={styles.requirementItem}>
+                  • Allowed file types:{' '}
+                  {assignment.allowed_file_types.join(', ')}
+                </Text>
+              )}
+            <Text style={styles.requirementItem}>
+              • Original work required - no plagiarism
+            </Text>
+            <Text style={styles.requirementItem}>
+              • Follow proper formatting guidelines
+            </Text>
           </View>
         </View>
 
@@ -206,6 +258,66 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
                     {index + 1}. {instruction.trim()}
                   </Text>
                 ))}
+            </View>
+          </View>
+        )}
+
+        {/* Submission Status Section */}
+        {hasSubmission && (
+          <View style={styles.submissionStatusSection}>
+            <View style={styles.submissionStatusHeader}>
+              <Icon name="check-circle" size={24} color={colors.success} />
+              <Text style={styles.submissionStatusTitle}>
+                Submission Status
+              </Text>
+            </View>
+
+            <View style={styles.submissionStatusContent}>
+              <View style={styles.submissionBadges}>
+                <View style={styles.submittedBadge}>
+                  <Icon
+                    name="check-circle"
+                    size={16}
+                    color={colors.textInverse}
+                  />
+                  <Text style={styles.submittedBadgeText}>Submitted</Text>
+                </View>
+                <View style={styles.statusTextBadge}>
+                  <Text style={styles.statusText}>
+                    {latestSubmission?.status || 'submitted'}
+                  </Text>
+                </View>
+              </View>
+
+              {submittedDate && (
+                <Text style={styles.submittedDateText}>
+                  Submitted:{' '}
+                  {submittedDate.toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                  })}
+                </Text>
+              )}
+
+              <View style={styles.submissionActions}>
+                {onViewSubmission && (
+                  <Button
+                    title="View Submission"
+                    onPress={onViewSubmission}
+                    variant="outline"
+                    style={styles.viewSubmissionButton}
+                  />
+                )}
+                {onEditSubmission && (
+                  <Button
+                    title="Edit Submission"
+                    onPress={onEditSubmission}
+                    variant="primary"
+                    style={styles.editSubmissionButton}
+                  />
+                )}
+              </View>
             </View>
           </View>
         )}
@@ -233,6 +345,12 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  scrollView: {
+    flex: 1,
+  },
+  scrollViewContent: {
+    paddingBottom: spacing.lg,
+  },
   headerSection: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -413,8 +531,76 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     includeFontPadding: false,
   },
-  closeButton: {
-    minWidth: 100,
+  submissionStatusSection: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  submissionStatusHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    marginBottom: spacing.md,
+  },
+  submissionStatusTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  submissionStatusContent: {
+    gap: spacing.sm,
+  },
+  submissionBadges: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    alignItems: 'center',
+  },
+  submittedBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    backgroundColor: colors.success,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+  },
+  submittedBadgeText: {
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.textInverse,
+    includeFontPadding: false,
+  },
+  statusTextBadge: {
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.backgroundSecondary,
+  },
+  statusText: {
+    fontSize: 12,
+    fontWeight: '500',
+    color: colors.text,
+    includeFontPadding: false,
+  },
+  submittedDateText: {
+    fontSize: 14,
+    fontWeight: '500',
+    color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+  submissionActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.sm,
+  },
+  viewSubmissionButton: {
+    flex: 1,
+  },
+  editSubmissionButton: {
+    flex: 1,
   },
 });
-

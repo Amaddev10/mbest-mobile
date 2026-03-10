@@ -303,6 +303,56 @@ export const studentService = {
     return response.data;
   },
 
+  submitAssignment: async (
+    assignmentId: number,
+    data: { text_submission?: string; file?: any }
+  ): Promise<ApiResponse<any>> => {
+    const formData = new FormData();
+
+    if (data.text_submission) {
+      formData.append('text_submission', data.text_submission);
+    }
+
+    if (data.file) {
+      const fileData: any = {
+        uri: data.file.uri,
+        type: data.file.type || 'application/octet-stream',
+        name: data.file.name || 'file',
+      };
+      formData.append('file', fileData);
+    }
+
+    const response = await apiClient.post<ApiResponse<any>>(
+      `/student/assignments/${assignmentId}/submit`,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      }
+    );
+    return response.data;
+  },
+
+  getSubmissionDetails: async (assignmentId: number): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(`/student/assignments/${assignmentId}/submission`);
+    return response.data;
+  },
+
+  submitQuestion: async (questionData: {
+    subject: string;
+    question: string;
+    class_id?: number;
+  }): Promise<ApiResponse<any>> => {
+    const response = await apiClient.post<ApiResponse<any>>('/student/questions', questionData);
+    return response.data;
+  },
+
+  getQuestions: async (): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>('/student/questions');
+    return response.data;
+  },
+
   // Grades
   getGrades: async (): Promise<ApiResponse<GradesResponse>> => {
     const response = await apiClient.get<ApiResponse<GradesResponse>>('/student/grades');

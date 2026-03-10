@@ -60,6 +60,7 @@ export type StudentStackParamList = {
   StudentTabs: NavigatorScreenParams<StudentTabParamList>;
   ClassDetails: { classId: number };
   GradeDetails: { gradeId: number };
+  MyQuestions: undefined;
 };
 
 export type SubscriptionStackParamList = {

@@ -3,8 +3,9 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
 import { useQuery } from '@tanstack/react-query';
+import { pick, types } from '@react-native-documents/picker';
 import { Modal } from './Modal';
 import { Button } from './Button';
 import { Icon } from './Icon';
@@ -25,6 +26,7 @@ interface Assignment {
   class?: string;
   tutor_name?: string;
   instructor?: string;
+  submission_type?: 'text' | 'file';
 }
 
 interface SubmitAssignmentModalProps {
@@ -32,7 +34,7 @@ interface SubmitAssignmentModalProps {
   onClose: () => void;
   assignmentId: number | null;
   assignment?: Assignment | null;
-  onSubmit: (submissionText: string) => void;
+  onSubmit: (data: { text_submission?: string; file?: any }) => void;
 }
 
 export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
@@ -43,6 +45,7 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
   onSubmit,
 }) => {
   const [submissionText, setSubmissionText] = useState('');
+  const [selectedFile, setSelectedFile] = useState<any>(null);
   const { token } = useAuthStore();
 
   // Fetch assignment details if assignmentId is provided
@@ -83,12 +86,50 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
     ? Math.ceil((now.getTime() - dueDate.getTime()) / (1000 * 60 * 60 * 24))
     : 0;
 
-  const handleSubmit = () => {
-    if (submissionText.trim()) {
-      onSubmit(submissionText);
-      setSubmissionText('');
+  const submissionType = (assignment as any)?.submission_type || 'text';
+
+  const handlePickFile = async () => {
+    try {
+      const result = await pick({
+        type: [types.allFiles],
+        allowMultiSelection: false,
+      });
+
+      if (result.length > 0) {
+        setSelectedFile(result[0]);
+      }
+    } catch (err: any) {
+      if (err?.code === 'DOCUMENT_PICKER_CANCELED' || err?.message?.includes('cancel')) {
+        return;
+      }
+      Alert.alert('Error', 'Failed to pick file');
+      console.error('DocumentPicker Error:', err);
     }
   };
+
+  const handleRemoveFile = () => {
+    setSelectedFile(null);
+  };
+
+  const handleSubmit = () => {
+    if (submissionType === 'text') {
+      if (submissionText.trim()) {
+        onSubmit({ text_submission: submissionText });
+        setSubmissionText('');
+        onClose();
+      }
+    } else if (submissionType === 'file') {
+      if (selectedFile) {
+        onSubmit({ file: selectedFile });
+        setSelectedFile(null);
+        onClose();
+      }
+    }
+  };
+
+  const isSubmitDisabled = submissionType === 'text' 
+    ? !submissionText.trim() 
+    : !selectedFile;
 
   return (
     <Modal visible={visible} onClose={onClose} title="Submit Assignment">
@@ -120,20 +161,60 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
         )}
       </View>
 
-      {/* Submission Text Area */}
-      <View style={styles.textAreaContainer}>
-        <Text style={styles.label}>Submission Text</Text>
-        <TextInput
-          style={styles.textArea}
-          placeholder="Enter your assignment submission here..."
-          placeholderTextColor={colors.textTertiary}
-          multiline
-          numberOfLines={8}
-          value={submissionText}
-          onChangeText={setSubmissionText}
-          textAlignVertical="top"
-        />
-      </View>
+      {/* Submission Input - Conditional based on submission_type */}
+      {submissionType === 'text' ? (
+        <View style={styles.textAreaContainer}>
+          <Text style={styles.label}>Submission Text</Text>
+          <TextInput
+            style={styles.textArea}
+            placeholder="Enter your assignment submission here..."
+            placeholderTextColor={colors.textTertiary}
+            multiline
+            numberOfLines={8}
+            value={submissionText}
+            onChangeText={setSubmissionText}
+            textAlignVertical="top"
+          />
+        </View>
+      ) : (
+        <View style={styles.fileUploadContainer}>
+          <Text style={styles.label}>Upload File</Text>
+          {!selectedFile ? (
+            <TouchableOpacity 
+              style={styles.fileUploadBox} 
+              onPress={handlePickFile}
+              activeOpacity={0.7}
+            >
+              <Icon name="upload" size={32} color={colors.primary} />
+              <Text style={styles.fileUploadText}>Tap to select a file</Text>
+              <Text style={styles.fileUploadHint}>
+                Any file type accepted
+              </Text>
+            </TouchableOpacity>
+          ) : (
+            <View style={styles.selectedFileContainer}>
+              <View style={styles.selectedFileInfo}>
+                <Icon name="file" size={24} color={colors.primary} />
+                <View style={styles.fileDetails}>
+                  <Text style={styles.fileName} numberOfLines={1}>
+                    {selectedFile.name}
+                  </Text>
+                  <Text style={styles.fileSize}>
+                    {(selectedFile.size / 1024).toFixed(2)} KB
+                  </Text>
+                </View>
+              </View>
+              <TouchableOpacity 
+                style={styles.removeFileButton}
+                onPress={handleRemoveFile}
+                activeOpacity={0.7}
+              >
+                <Icon name="x" size={20} color={colors.error} />
+              </TouchableOpacity>
+            </View>
+          )}
+        </View>
+      )}
 
       {/* Action Buttons */}
       <View style={styles.actions}>
@@ -148,7 +229,7 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
           onPress={handleSubmit}
           variant="primary"
           style={styles.submitButton}
-          disabled={!submissionText.trim()}
+          disabled={isSubmitDisabled}
         />
       </View>
     </Modal>
@@ -265,6 +346,75 @@ const styles = StyleSheet.create({
   },
   closeButton: {
     minWidth: 100,
+  },
+  fileUploadContainer: {
+    marginBottom: spacing.lg,
+  },
+  fileUploadBox: {
+    borderWidth: 2,
+    borderStyle: 'dashed',
+    borderColor: colors.primary,
+    borderRadius: borderRadius.lg,
+    padding: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: colors.primaryLight + '10',
+    minHeight: 150,
+  },
+  fileUploadText: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginTop: spacing.md,
+    includeFontPadding: false,
+  },
+  fileUploadHint: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.textSecondary,
+    marginTop: spacing.xs,
+    includeFontPadding: false,
+  },
+  selectedFileContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    backgroundColor: colors.surface,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    ...shadows.sm,
+  },
+  selectedFileInfo: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    flex: 1,
+  },
+  fileDetails: {
+    flex: 1,
+  },
+  fileName: {
+    fontSize: 14,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs / 2,
+    includeFontPadding: false,
+  },
+  fileSize: {
+    fontSize: 12,
+    fontWeight: '400',
+    color: colors.textSecondary,
+    includeFontPadding: false,
+  },
+  removeFileButton: {
+    width: 32,
+    height: 32,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.errorLight + '20',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
 });
 

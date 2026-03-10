@@ -4,8 +4,9 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView } from 'react-native';
-import { useQuery } from '@tanstack/react-query';
+import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, RefreshControl, Alert } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { studentService } from '../../services/api/student';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
@@ -19,20 +20,49 @@ import { Button } from '../../components/common/Button';
 import { SubmitAssignmentModal } from '../../components/common/SubmitAssignmentModal';
 import { AssignmentDetailsModal } from '../../components/common/AssignmentDetailsModal';
 import { AskQuestionModal } from '../../components/common/AskQuestionModal';
+import { ViewSubmissionModal } from '../../components/common/ViewSubmissionModal';
 
 export const StudentAssignmentsScreen: React.FC = () => {
   const { token } = useAuthStore();
+  const navigation = useNavigation<any>();
+  const queryClient = useQueryClient();
   const [filter, setFilter] = useState<'all' | 'due' | 'submitted' | 'graded'>('all');
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
   const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAskQuestionModal, setShowAskQuestionModal] = useState(false);
+  const [showViewSubmissionModal, setShowViewSubmissionModal] = useState(false);
 
-  const { data, isLoading, error } = useQuery({
+  const [refreshing, setRefreshing] = useState(false);
+
+  const { data, isLoading, error, refetch } = useQuery({
     queryKey: ['studentAssignments'],
     queryFn: () => studentService.getAssignments(),
     enabled: !!token,
+  });
+
+  const submitMutation = useMutation({
+    mutationFn: ({ assignmentId, submissionData }: { assignmentId: number; submissionData: { text_submission?: string; file?: any } }) =>
+      studentService.submitAssignment(assignmentId, submissionData),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['studentAssignments'] });
+      Alert.alert('Success', 'Assignment submitted successfully!');
+    },
+    onError: (error: any) => {
+      Alert.alert('Error', error?.response?.data?.message || 'Failed to submit assignment');
+    },
+  });
+
+  const questionMutation = useMutation({
+    mutationFn: (questionData: { subject: string; question: string; class_id?: number }) =>
+      studentService.submitQuestion(questionData),
+    onSuccess: () => {
+      Alert.alert('Success', 'Question submitted successfully!');
+    },
+    onError: (error: any) => {
+      Alert.alert('Error', error?.response?.data?.message || 'Failed to submit question');
+    },
   });
 
   if (isLoading) {
@@ -78,6 +108,15 @@ export const StudentAssignmentsScreen: React.FC = () => {
     return new Date(dueDate) < new Date() && status !== 'graded' && status !== 'submitted';
   };
 
+  const onRefresh = async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  };
+
   return (
     <View style={styles.container}>
       <Header title="Assignments" showProfile={true} />
@@ -115,6 +154,14 @@ export const StudentAssignmentsScreen: React.FC = () => {
           filteredAssignments.length === 0 && styles.emptyListContent,
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
         renderItem={({ item }) => {
           const dueDate = new Date(item.due_date);
           const daysUntilDue = getDaysUntilDue(item.due_date);
@@ -189,16 +236,29 @@ export const StudentAssignmentsScreen: React.FC = () => {
 
               {/* Action Buttons */}
               <View style={styles.actionButtonsContainer}>
-                <Button
-                  title="Submit Assignment"
-                  onPress={() => {
-                    setSelectedAssignment(item);
-                    setSelectedAssignmentId(item.id);
-                    setShowSubmitModal(true);
-                  }}
-                  variant="primary"
-                  style={styles.submitButton}
-                />
+                {item.submissions && item.submissions.length > 0 ? (
+                  <Button
+                    title="View Submission"
+                    onPress={() => {
+                      setSelectedAssignment(item);
+                      setSelectedAssignmentId(item.id);
+                      setShowViewSubmissionModal(true);
+                    }}
+                    variant="primary"
+                    style={styles.submitButton}
+                  />
+                ) : (
+                  <Button
+                    title="Submit Assignment"
+                    onPress={() => {
+                      setSelectedAssignment(item);
+                      setSelectedAssignmentId(item.id);
+                      setShowSubmitModal(true);
+                    }}
+                    variant="primary"
+                    style={styles.submitButton}
+                  />
+                )}
                 <View style={styles.secondaryButtons}>
                   <TouchableOpacity 
                     style={styles.secondaryButton}
@@ -225,6 +285,9 @@ export const StudentAssignmentsScreen: React.FC = () => {
                   <TouchableOpacity 
                     style={styles.secondaryButton}
                     activeOpacity={0.7}
+                    onPress={() => {
+                      navigation.navigate('MyQuestions');
+                    }}
                   >
                     <Text style={styles.secondaryButtonText}>View Q&A Thread</Text>
                   </TouchableOpacity>
@@ -270,12 +333,17 @@ export const StudentAssignmentsScreen: React.FC = () => {
         }}
         assignmentId={selectedAssignmentId || selectedAssignment?.id || null}
         assignment={selectedAssignment}
-        onSubmit={(submissionText) => {
-          // TODO: Handle submission
-          console.log('Submitting:', submissionText);
-          setShowSubmitModal(false);
-          setSelectedAssignment(null);
-          setSelectedAssignmentId(null);
+        onSubmit={(submissionData) => {
+          const assignmentId = selectedAssignmentId || selectedAssignment?.id;
+          if (assignmentId) {
+            submitMutation.mutate({ 
+              assignmentId, 
+              submissionData 
+            });
+            setShowSubmitModal(false);
+            setSelectedAssignment(null);
+            setSelectedAssignmentId(null);
+          }
         }}
       />
 
@@ -292,6 +360,14 @@ export const StudentAssignmentsScreen: React.FC = () => {
           setSelectedAssignmentId(null);
           setShowSubmitModal(true);
         }}
+        onViewSubmission={() => {
+          setShowDetailsModal(false);
+          setShowViewSubmissionModal(true);
+        }}
+        onEditSubmission={() => {
+          setShowDetailsModal(false);
+          setShowSubmitModal(true);
+        }}
       />
 
       <AskQuestionModal
@@ -304,12 +380,27 @@ export const StudentAssignmentsScreen: React.FC = () => {
         assignmentId={selectedAssignmentId || selectedAssignment?.id || null}
         assignment={selectedAssignment}
         onSend={(question) => {
-          // TODO: Handle question submission
-          console.log('Sending question:', question);
+          // Submit question to API
+          const questionData = {
+            subject: question.subject,
+            question: question.message,
+            class_id: selectedAssignment?.class_id || selectedAssignment?.class_model?.id,
+          };
+          questionMutation.mutate(questionData);
           setShowAskQuestionModal(false);
           setSelectedAssignment(null);
           setSelectedAssignmentId(null);
         }}
+      />
+
+      <ViewSubmissionModal
+        visible={showViewSubmissionModal}
+        onClose={() => {
+          setShowViewSubmissionModal(false);
+          setSelectedAssignment(null);
+          setSelectedAssignmentId(null);
+        }}
+        assignmentId={selectedAssignmentId || selectedAssignment?.id || null}
       />
     </View>
   );

@@ -50,6 +50,7 @@ import { StudentGradesScreen } from '../screens/student/StudentGradesScreen';
 import { StudentAttendanceScreen } from '../screens/student/StudentAttendanceScreen';
 import { StudentGradeDetailsScreen } from '../screens/student/StudentGradeDetailsScreen';
 import { StudentClassDetailsScreen } from '../screens/student/StudentClassDetailsScreen';
+import { MyQuestionsScreen } from '../screens/student/MyQuestionsScreen';
 
 // Parent Screens
 import { ParentDashboardScreen } from '../screens/parent/ParentDashboardScreen';
@@ -372,6 +373,13 @@ const StudentNavigator = () => {
             lineHeight: 26,
           },
           title: 'Class Details',
+        }}
+      />
+      <StudentStack.Screen 
+        name="MyQuestions" 
+        component={MyQuestionsScreen}
+        options={{
+          headerShown: false,
         }}
       />
     </StudentStack.Navigator>
