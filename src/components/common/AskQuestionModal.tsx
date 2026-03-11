@@ -57,13 +57,19 @@ interface AskQuestionModalProps {
   }) => void;
 }
 
-const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'];
+const PRIORITIES = [
+  { label: 'Low', value: 'low' },
+  { label: 'Medium', value: 'medium' },
+  { label: 'High', value: 'high' },
+  { label: 'Urgent', value: 'urgent' },
+];
+
 const CATEGORIES = [
-  'Assignment Help',
-  'Concept Clarification',
-  'Technical Issue',
-  'Grading Question',
-  'General Question',
+  { label: 'Assignment Help', value: 'assignment' },
+  { label: 'Concept Clarification', value: 'concept' },
+  { label: 'Technical Issue', value: 'technical' },
+  { label: 'Grading Question', value: 'grading' },
+  { label: 'General Question', value: 'general' },
 ];
 
 export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
@@ -74,8 +80,8 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
   onSend,
 }) => {
   const [subject, setSubject] = useState('');
-  const [priority, setPriority] = useState('Medium');
-  const [category, setCategory] = useState('Assignment Help');
+  const [priority, setPriority] = useState(PRIORITIES[1].value);
+  const [category, setCategory] = useState(CATEGORIES[0].value);
   const [message, setMessage] = useState('');
   const [showCategoryDropdown, setShowCategoryDropdown] = useState(false);
   const [attachedFiles, setAttachedFiles] = useState<any[]>([]);
@@ -159,23 +165,16 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
         priority,
         category,
         message,
-        attachments: attachedFiles.map((file) => file.name).filter(Boolean),
+        attachments: attachedFiles,
       });
       // Reset form
       setSubject('');
-      setPriority('Medium');
-      setCategory('Assignment Help');
+      setPriority(PRIORITIES[1].value);
+      setCategory(CATEGORIES[0].value);
       setMessage('');
       setAttachedFiles([]);
       onClose();
     }
-    console.log('handleSend', {
-      subject,
-      priority,
-      category,
-      message,
-      attachments: attachedFiles,
-    });
   };
 
   return (
@@ -221,23 +220,23 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
             showsHorizontalScrollIndicator={false}
             style={styles.priorityScroll}
           >
-            {PRIORITIES.map(p => (
+            {PRIORITIES.map((p) => (
               <TouchableOpacity
-                key={p}
+                key={p.value}
                 style={[
                   styles.priorityOption,
-                  priority === p && styles.priorityOptionActive,
+                  priority === p.value && styles.priorityOptionActive,
                 ]}
-                onPress={() => setPriority(p)}
+                onPress={() => setPriority(p.value)}
                 activeOpacity={0.7}
               >
                 <Text
                   style={[
                     styles.priorityOptionText,
-                    priority === p && styles.priorityOptionTextActive,
+                    priority === p.value && styles.priorityOptionTextActive,
                   ]}
                 >
-                  {p}
+                  {p.label}
                 </Text>
               </TouchableOpacity>
             ))}
@@ -250,13 +249,11 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
           <View
             style={[
               styles.priorityBadge,
-              priority === 'High' || priority === 'Urgent'
-                ? styles.priorityBadgeHigh
-                : {},
+              (priority === 'high' || priority === 'urgent') && styles.priorityBadgeHigh,
             ]}
           >
             <Text style={styles.priorityBadgeText}>
-              {priority.toLowerCase()}
+              {PRIORITIES.find((p) => p.value === priority)?.label.toLowerCase() || 'medium'}
             </Text>
           </View>
         </View>
@@ -269,7 +266,9 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
             onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
             activeOpacity={0.7}
           >
-            <Text style={styles.categoryDropdownText}>{category}</Text>
+            <Text style={styles.categoryDropdownText}>
+              {CATEGORIES.find((cat) => cat.value === category)?.label || 'Assignment Help'}
+            </Text>
             <Icon
               name={showCategoryDropdown ? 'chevron-down' : 'chevron-down'}
               size={20}
@@ -278,29 +277,29 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
           </TouchableOpacity>
           {showCategoryDropdown && (
             <View style={styles.categoryDropdownList}>
-              {CATEGORIES.map(cat => (
+              {CATEGORIES.map((cat) => (
                 <TouchableOpacity
-                  key={cat}
+                  key={cat.value}
                   style={[
                     styles.categoryOption,
-                    category === cat && styles.categoryOptionActive,
+                    category === cat.value && styles.categoryOptionActive,
                   ]}
                   onPress={() => {
-                    setCategory(cat);
+                    setCategory(cat.value);
                     setShowCategoryDropdown(false);
                   }}
                   activeOpacity={0.7}
                 >
-                  {category === cat && (
+                  {category === cat.value && (
                     <Icon name="check" size={16} color={colors.primary} />
                   )}
                   <Text
                     style={[
                       styles.categoryOptionText,
-                      category === cat && styles.categoryOptionTextActive,
+                      category === cat.value && styles.categoryOptionTextActive,
                     ]}
                   >
-                    {cat}
+                    {cat.label}
                   </Text>
                 </TouchableOpacity>
               ))}

@@ -80,7 +80,11 @@ export const StudentAssignmentsScreen: React.FC = () => {
     mutationFn: (questionData: {
       subject: string;
       question: string;
-      class_id?: number;
+      class_id?: number | string;
+      assignment_id?: number | string;
+      tutor_id?: number | string;
+      priority?: string;
+      category?: string;
       attachments?: any[];
     }) => studentService.submitQuestion(questionData),
     onSuccess: () => {
@@ -470,15 +474,20 @@ export const StudentAssignmentsScreen: React.FC = () => {
         }}
         assignmentId={selectedAssignmentId || selectedAssignment?.id || null}
         assignment={selectedAssignment}
-        onSend={question => {
-          // Submit question to API
+        onSend={(question) => {
           const questionData = {
             subject: question.subject,
             question: question.message,
-            attachments: question.attachments,
             class_id:
               selectedAssignment?.class_id ||
               selectedAssignment?.class_model?.id,
+            assignment_id: selectedAssignmentId || selectedAssignment?.id,
+            tutor_id:
+              selectedAssignment?.tutor_id ||
+              selectedAssignment?.tutor?.id,
+            priority: question.priority,
+            category: question.category,
+            attachments: question.attachments || [],
           };
           questionMutation.mutate(questionData);
           setShowAskQuestionModal(false);

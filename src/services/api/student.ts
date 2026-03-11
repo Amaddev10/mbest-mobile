@@ -362,14 +362,57 @@ export const studentService = {
   submitQuestion: async (questionData: {
     subject: string;
     question: string;
-    class_id?: number;
+    class_id?: number | string;
+    assignment_id?: number | string;
+    tutor_id?: number | string;
+    priority?: string;
+    category?: string;
     attachments?: any[];
   }): Promise<ApiResponse<any>> => {
+    const formData = new FormData();
+
+    formData.append('subject', questionData.subject);
+    formData.append('question', questionData.question);
+
+    if (questionData.class_id !== undefined && questionData.class_id !== null) {
+      formData.append('class_id', String(questionData.class_id));
+    }
+    if (questionData.assignment_id !== undefined && questionData.assignment_id !== null) {
+      formData.append('assignment_id', String(questionData.assignment_id));
+    }
+    if (questionData.tutor_id !== undefined && questionData.tutor_id !== null) {
+      formData.append('tutor_id', String(questionData.tutor_id));
+    }
+    if (questionData.priority) {
+      formData.append('priority', questionData.priority.toLowerCase());
+    }
+    if (questionData.category) {
+      formData.append('category', questionData.category.toLowerCase());
+    }
+
+    questionData.attachments?.forEach((file, index) => {
+      const uri = file?.uri || file?.fileCopyUri;
+      if (!uri) {
+        return;
+      }
+
+      formData.append('attachments[]', {
+        uri,
+        type: file.type || 'application/octet-stream',
+        name: file.name || `attachment_${index + 1}`,
+      } as any);
+    });
+
     const response = await apiClient.post<ApiResponse<any>>(
       '/student/questions',
-      questionData,
+      formData,
+      {
+        headers: {
+          'Content-Type': 'multipart/form-data',
+        },
+      },
     );
-    console.log('questionData', questionData);
+
     return response.data;
   },
 
