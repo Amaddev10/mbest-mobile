@@ -178,103 +178,111 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
   };
 
   return (
-    <Modal visible={visible} onClose={onClose} title="Ask a Question">
+    <Modal
+      visible={visible}
+      onClose={onClose}
+      title="Ask a Question"
+      scrollable={false}
+    >
       <ScrollView
+        style={styles.scrollContainer}
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.modalContent}
       >
-        {/* Header with Icon */}
-        <View style={styles.headerSection}>
-          <Icon name="message-circle" size={24} color={colors.primary} />
-          <Text style={styles.headerTitle}>Ask a Question</Text>
+        <View style={styles.sectionCard}>
+          <View style={styles.headerSection}>
+            <Icon name="message-circle" size={24} color={colors.primary} />
+            <Text style={styles.headerTitle}>Ask a Question</Text>
+          </View>
+          <Text style={styles.subtitle}>
+            Ask about: {(assignment as any)?.title || 'Untitled Assignment'} •{' '}
+            {(assignment as any)?.class_model?.name ||
+              (assignment as any)?.subject ||
+              (assignment as any)?.class ||
+              'General'}{' '}
+            •{' '}
+            {(assignment as any)?.tutor?.user?.name ||
+              (assignment as any)?.tutor_name ||
+              (assignment as any)?.instructor ||
+              'Instructor'}
+          </Text>
         </View>
 
-        {/* Subtitle */}
-        <Text style={styles.subtitle}>
-          Ask about: {(assignment as any)?.title || 'Untitled Assignment'} •{' '}
-          {(assignment as any)?.class_model?.name ||
-            (assignment as any)?.subject ||
-            (assignment as any)?.class ||
-            'General'}{' '}
-          •{' '}
-          {(assignment as any)?.tutor?.user?.name ||
-            (assignment as any)?.tutor_name ||
-            (assignment as any)?.instructor ||
-            'Instructor'}
-        </Text>
+        <View style={styles.sectionCard}>
+          <Input
+            label="Subject"
+            placeholder="Brief subject line..."
+            value={subject}
+            onChangeText={setSubject}
+            containerStyle={styles.fieldInput}
+          />
+        </View>
 
-        {/* Subject Input */}
-        <Input
-          label="Subject"
-          placeholder="Brief subject line..."
-          value={subject}
-          onChangeText={setSubject}
-        />
-
-        {/* Priority Dropdown */}
-        <View style={styles.dropdownContainer}>
-          <Text style={styles.label}>Priority</Text>
-          <ScrollView
-            horizontal
-            showsHorizontalScrollIndicator={false}
-            style={styles.priorityScroll}
-          >
-            {PRIORITIES.map((p) => (
-              <TouchableOpacity
-                key={p.value}
-                style={[
-                  styles.priorityOption,
-                  priority === p.value && styles.priorityOptionActive,
-                ]}
-                onPress={() => setPriority(p.value)}
-                activeOpacity={0.7}
-              >
-                <Text
+        <View style={styles.sectionCard}>
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.label}>Priority</Text>
+            <ScrollView
+              horizontal
+              showsHorizontalScrollIndicator={false}
+              style={styles.priorityScroll}
+            >
+              {PRIORITIES.map((p) => (
+                <TouchableOpacity
+                  key={p.value}
                   style={[
-                    styles.priorityOptionText,
-                    priority === p.value && styles.priorityOptionTextActive,
+                    styles.priorityOption,
+                    priority === p.value && styles.priorityOptionActive,
                   ]}
+                  onPress={() => setPriority(p.value)}
+                  activeOpacity={0.7}
                 >
-                  {p.label}
-                </Text>
-              </TouchableOpacity>
-            ))}
-          </ScrollView>
-        </View>
-
-        {/* Priority Badge Display */}
-        <View style={styles.priorityBadgeContainer}>
-          <Text style={styles.label}>Priority:</Text>
-          <View
-            style={[
-              styles.priorityBadge,
-              (priority === 'high' || priority === 'urgent') && styles.priorityBadgeHigh,
-            ]}
-          >
-            <Text style={styles.priorityBadgeText}>
-              {PRIORITIES.find((p) => p.value === priority)?.label.toLowerCase() || 'medium'}
-            </Text>
+                  <Text
+                    style={[
+                      styles.priorityOptionText,
+                      priority === p.value && styles.priorityOptionTextActive,
+                    ]}
+                  >
+                    {p.label}
+                  </Text>
+                </TouchableOpacity>
+              ))}
+            </ScrollView>
+          </View>
+          <View style={styles.priorityBadgeContainer}>
+            <Text style={styles.label}>Priority:</Text>
+            <View
+              style={[
+                styles.priorityBadge,
+                (priority === 'high' || priority === 'urgent') && styles.priorityBadgeHigh,
+              ]}
+            >
+              <Text style={styles.priorityBadgeText}>
+                {PRIORITIES.find((p) => p.value === priority)?.label.toLowerCase() ||
+                  'medium'}
+              </Text>
+            </View>
           </View>
         </View>
 
-        {/* Category Dropdown */}
-        <View style={styles.dropdownContainer}>
-          <Text style={styles.label}>Category</Text>
-          <TouchableOpacity
-            style={styles.categoryDropdown}
-            onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
-            activeOpacity={0.7}
-          >
-            <Text style={styles.categoryDropdownText}>
-              {CATEGORIES.find((cat) => cat.value === category)?.label || 'Assignment Help'}
-            </Text>
-            <Icon
-              name={showCategoryDropdown ? 'chevron-down' : 'chevron-down'}
-              size={20}
-              color={colors.textSecondary}
-            />
-          </TouchableOpacity>
+        <View style={styles.sectionCard}>
+          <View style={styles.dropdownContainer}>
+            <Text style={styles.label}>Category</Text>
+            <TouchableOpacity
+              style={styles.categoryDropdown}
+              onPress={() => setShowCategoryDropdown(!showCategoryDropdown)}
+              activeOpacity={0.7}
+            >
+              <Text style={styles.categoryDropdownText}>
+                {CATEGORIES.find((cat) => cat.value === category)?.label || 'Assignment Help'}
+              </Text>
+              <Icon
+                name={showCategoryDropdown ? 'chevron-down' : 'chevron-down'}
+                size={20}
+                color={colors.textSecondary}
+              />
+            </TouchableOpacity>
+          </View>
           {showCategoryDropdown && (
             <View style={styles.categoryDropdownList}>
               {CATEGORIES.map((cat) => (
@@ -307,8 +315,7 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
           )}
         </View>
 
-        {/* Attachments */}
-        <View style={styles.attachmentsContainer}>
+        <View style={styles.sectionCard}>
           <Text style={styles.label}>Attachments (Optional)</Text>
           <View style={styles.attachmentsRow}>
             <TouchableOpacity
@@ -323,8 +330,6 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
               {attachedFiles.length}/3 files attached
             </Text>
           </View>
-
-          {/* Attached Files List */}
           {attachedFiles.length > 0 && (
             <View style={styles.attachedFilesList}>
               {attachedFiles.map((file, index) => (
@@ -346,18 +351,18 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
           )}
         </View>
 
-        {/* Message Input */}
-        <Input
-          label="Question"
-          placeholder="Enter your question here..."
-          value={message}
-          onChangeText={setMessage}
-          multiline
-          numberOfLines={6}
-          containerStyle={styles.messageInput}
-        />
+        <View style={styles.sectionCard}>
+          <Input
+            label="Question"
+            placeholder="Enter your question here..."
+            value={message}
+            onChangeText={setMessage}
+            multiline
+            numberOfLines={6}
+            containerStyle={styles.messageInput}
+          />
+        </View>
 
-        {/* Action Buttons */}
         <View style={styles.actions}>
           <Button
             title="Cancel"
@@ -379,14 +384,25 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
 };
 
 const styles = StyleSheet.create({
+  scrollContainer: {
+    flex: 1,
+  },
   modalContent: {
-    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  sectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   headerSection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.sm,
   },
   headerTitle: {
     fontSize: 18,
@@ -398,9 +414,12 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '400',
     color: colors.textSecondary,
-    marginBottom: spacing.lg,
+    marginTop: spacing.sm,
     lineHeight: 18,
     includeFontPadding: false,
+  },
+  fieldInput: {
+    marginBottom: 0,
   },
   label: {
     fontSize: 14,
@@ -410,7 +429,7 @@ const styles = StyleSheet.create({
     includeFontPadding: false,
   },
   dropdownContainer: {
-    marginBottom: spacing.lg,
+    marginBottom: spacing.sm,
   },
   priorityScroll: {
     marginTop: spacing.xs,
@@ -441,7 +460,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.lg,
+    marginTop: spacing.md,
   },
   priorityBadge: {
     backgroundColor: colors.info,
@@ -506,9 +525,6 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     color: colors.primary,
   },
-  attachmentsContainer: {
-    marginBottom: spacing.lg,
-  },
   attachmentsRow: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -538,9 +554,6 @@ const styles = StyleSheet.create({
     color: colors.textSecondary,
     includeFontPadding: false,
   },
-  messageInput: {
-    marginBottom: spacing.lg,
-  },
   actions: {
     flexDirection: 'row',
     justifyContent: 'flex-end',
@@ -552,6 +565,9 @@ const styles = StyleSheet.create({
   },
   sendButton: {
     minWidth: 150,
+  },
+  messageInput: {
+    marginBottom: 0,
   },
   attachedFilesList: {
     marginTop: spacing.md,

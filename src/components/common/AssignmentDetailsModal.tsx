@@ -15,15 +15,13 @@ import {
 } from '../../services/api/student';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
-import { spacing, borderRadius, shadows } from '../../constants/spacing';
-import { textStyles } from '../../constants/typography';
+import { spacing, borderRadius } from '../../constants/spacing';
 
 interface AssignmentDetailsModalProps {
   visible: boolean;
   onClose: () => void;
   assignmentId: number | null;
   onStartAssignment?: () => void;
-  onViewSubmission?: () => void;
   onEditSubmission?: () => void;
 }
 
@@ -32,7 +30,6 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
   onClose,
   assignmentId,
   onStartAssignment,
-  onViewSubmission,
   onEditSubmission,
 }) => {
   const { token } = useAuthStore();
@@ -116,91 +113,89 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
     : null;
 
   return (
-    <Modal visible={visible} onClose={onClose} title="Assignment Details">
+    <Modal visible={visible} onClose={onClose} title="Assignment Details" scrollable={false}>
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.scrollViewContent}
+        showsVerticalScrollIndicator={false}
       >
-        {/* Header with Icon */}
-        <View style={styles.headerSection}>
-          <Icon name="file-text" size={24} color={colors.primary} />
-          <Text style={styles.headerTitle}>Assignment Details</Text>
-        </View>
-
-        {/* Title and Priority Badge */}
-        <View style={styles.titleSection}>
-          <Text style={styles.assignmentTitle}>{assignment.title}</Text>
-          {hasHighPriority && (
-            <View style={styles.priorityBadge}>
-              <Text style={styles.priorityBadgeText}>high priority</Text>
-            </View>
+        <View style={styles.sectionCard}>
+          <View style={styles.headerSection}>
+            <Icon name="file-text" size={24} color={colors.primary} />
+            <Text style={styles.headerTitle}>Assignment Details</Text>
+          </View>
+          <View style={styles.titleSection}>
+            <Text style={styles.assignmentTitle}>{assignment.title}</Text>
+            {hasHighPriority && (
+              <View style={styles.priorityBadge}>
+                <Text style={styles.priorityBadgeText}>high priority</Text>
+              </View>
+            )}
+          </View>
+          {assignment.description && (
+            <Text style={styles.description}>{assignment.description}</Text>
           )}
         </View>
 
-        {/* Description */}
-        {assignment.description && (
-          <Text style={styles.description}>{assignment.description}</Text>
-        )}
-
-        {/* Key Information Grid */}
-        <View style={styles.infoGrid}>
-          <View style={styles.infoItem}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="user" size={20} color={colors.primary} />
+        <View style={styles.sectionCard}>
+          <View style={styles.infoGrid}>
+            <View style={styles.infoItem}>
+              <View style={styles.infoIconContainer}>
+                <Icon name="user" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Instructor</Text>
+                <Text style={styles.infoValue}>
+                  {assignment.tutor?.user?.name ||
+                    assignment.class_model?.tutor?.user?.name ||
+                    'N/A'}
+                </Text>
+              </View>
             </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Instructor</Text>
-              <Text style={styles.infoValue}>
-                {assignment.tutor?.user?.name ||
-                  assignment.class_model?.tutor?.user?.name ||
-                  'N/A'}
-              </Text>
+            <View style={styles.infoItem}>
+              <View style={styles.infoIconContainer}>
+                <Icon name="book" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Class</Text>
+                <Text style={styles.infoValue}>
+                  {assignment.class_model?.name ||
+                    assignment.class?.name ||
+                    assignment.class?.subject ||
+                    'N/A'}
+                </Text>
+              </View>
             </View>
-          </View>
-          <View style={styles.infoItem}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="book" size={20} color={colors.primary} />
+            <View style={styles.infoItem}>
+              <View style={styles.infoIconContainer}>
+                <Icon name="calendar" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Due Date</Text>
+                <Text style={styles.infoValue}>
+                  {dueDate.toLocaleDateString('en-US', {
+                    month: '2-digit',
+                    day: '2-digit',
+                    year: 'numeric',
+                  })}
+                </Text>
+              </View>
             </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Class</Text>
-              <Text style={styles.infoValue}>
-                {assignment.class_model?.name ||
-                  assignment.class?.name ||
-                  assignment.class?.subject ||
-                  'N/A'}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.infoItem}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="calendar" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Due Date</Text>
-              <Text style={styles.infoValue}>
-                {dueDate.toLocaleDateString('en-US', {
-                  month: '2-digit',
-                  day: '2-digit',
-                  year: 'numeric',
-                })}
-              </Text>
-            </View>
-          </View>
-          <View style={styles.infoItem}>
-            <View style={styles.infoIconContainer}>
-              <Icon name="target" size={20} color={colors.primary} />
-            </View>
-            <View style={styles.infoTextContainer}>
-              <Text style={styles.infoLabel}>Points</Text>
-              <Text style={styles.infoValue}>
-                {assignment.max_points || 0} points
-              </Text>
+            <View style={styles.infoItem}>
+              <View style={styles.infoIconContainer}>
+                <Icon name="target" size={20} color={colors.primary} />
+              </View>
+              <View style={styles.infoTextContainer}>
+                <Text style={styles.infoLabel}>Points</Text>
+                <Text style={styles.infoValue}>
+                  {assignment.max_points || 0} points
+                </Text>
+              </View>
             </View>
           </View>
         </View>
 
-        {/* Time Remaining */}
-        <View style={styles.timeRemainingSection}>
+        <View style={styles.sectionCard}>
           <View style={styles.timeRemainingHeader}>
             <Icon name="clock" size={20} color={colors.primary} />
             <Text style={styles.timeRemainingLabel}>Time Remaining</Text>
@@ -221,8 +216,7 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
           </Text>
         </View>
 
-        {/* Submission Requirements */}
-        <View style={styles.section}>
+        <View style={styles.sectionCard}>
           <Text style={styles.sectionTitle}>Submission Requirements:</Text>
           <View style={styles.requirementsList}>
             <Text style={styles.requirementItem}>
@@ -245,13 +239,12 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
           </View>
         </View>
 
-        {/* Instructions */}
         {assignment.instructions && (
-          <View style={styles.section}>
+          <View style={styles.sectionCard}>
             <Text style={styles.sectionTitle}>Instructions:</Text>
             <View style={styles.instructionsList}>
               {assignment.instructions
-                .split(/\\n|\n/)
+                .split(/\n|\n/)
                 .filter(line => line.trim())
                 .map((instruction, index) => (
                   <Text key={index} style={styles.instructionItem}>
@@ -262,7 +255,6 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
           </View>
         )}
 
-        {/* Submission Status Section */}
         {hasSubmission && (
           <View style={styles.submissionStatusSection}>
             <View style={styles.submissionStatusHeader}>
@@ -301,14 +293,6 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
               )}
 
               <View style={styles.submissionActions}>
-                {onViewSubmission && (
-                  <Button
-                    title="View Submission"
-                    onPress={onViewSubmission}
-                    variant="outline"
-                    style={styles.viewSubmissionButton}
-                  />
-                )}
                 {onEditSubmission && (
                   <Button
                     title="Edit Submission"
@@ -322,7 +306,6 @@ export const AssignmentDetailsModal: React.FC<AssignmentDetailsModalProps> = ({
           </View>
         )}
 
-        {/* Action Buttons */}
         <View style={styles.actions}>
           <Button
             title="Close"
@@ -349,13 +332,21 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   scrollViewContent: {
-    paddingBottom: spacing.lg,
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.xl,
+    gap: spacing.md,
+  },
+  sectionCard: {
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
   },
   headerSection: {
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
-    marginBottom: spacing.md,
   },
   headerTitle: {
     fontSize: 18,

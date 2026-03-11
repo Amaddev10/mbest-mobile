@@ -3,7 +3,14 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TextInput, TouchableOpacity, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TextInput,
+  TouchableOpacity,
+  Alert,
+} from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { pick, types } from '@react-native-documents/picker';
 import { Modal } from './Modal';
@@ -73,7 +80,12 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Assignment not found</Text>
-          <Button title="Close" onPress={onClose} variant="outline" style={styles.closeButton} />
+          <Button
+            title="Close"
+            onPress={onClose}
+            variant="outline"
+            style={styles.closeButton}
+          />
         </View>
       </Modal>
     );
@@ -99,7 +111,10 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
         setSelectedFile(result[0]);
       }
     } catch (err: any) {
-      if (err?.code === 'DOCUMENT_PICKER_CANCELED' || err?.message?.includes('cancel')) {
+      if (
+        err?.code === 'DOCUMENT_PICKER_CANCELED' ||
+        err?.message?.includes('cancel')
+      ) {
         return;
       }
       Alert.alert('Error', 'Failed to pick file');
@@ -127,35 +142,43 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
     }
   };
 
-  const isSubmitDisabled = submissionType === 'text' 
-    ? !submissionText.trim() 
-    : !selectedFile;
+  const isSubmitDisabled =
+    submissionType === 'text' ? !submissionText.trim() : !selectedFile;
 
   return (
     <Modal visible={visible} onClose={onClose} title="Submit Assignment">
       {/* Assignment Info Card */}
       <View style={styles.infoCard}>
-        <Text style={styles.assignmentTitle}>{(assignment as any)?.title || 'Untitled Assignment'}</Text>
+        <Text style={styles.assignmentTitle}>
+          {(assignment as any)?.title || 'Untitled Assignment'}
+        </Text>
         {(assignment as any)?.description && (
-          <Text style={styles.assignmentDescription}>{(assignment as any).description}</Text>
+          <Text style={styles.assignmentDescription} numberOfLines={10}>
+            {(assignment as any).description}
+          </Text>
         )}
         <View style={styles.detailsRow}>
           <Text style={styles.detailText}>
-            Due: {dueDate.toLocaleDateString('en-US', { 
-              month: '2-digit', 
-              day: '2-digit', 
-              year: 'numeric' 
+            Due:{' '}
+            {dueDate.toLocaleDateString('en-US', {
+              month: '2-digit',
+              day: '2-digit',
+              year: 'numeric',
             })}
           </Text>
           {(assignment as any)?.max_points && (
-            <Text style={styles.detailText}>Points: {(assignment as any).max_points}</Text>
+            <Text style={styles.detailText}>
+              Points: {(assignment as any).max_points}
+            </Text>
           )}
         </View>
         {isOverdue && (
           <View style={styles.warningBox}>
             <Icon name="alert-circle" size={20} color={colors.warning} />
             <Text style={styles.warningText}>
-              This assignment is {daysOverdue} {daysOverdue === 1 ? 'day' : 'days'} overdue. You can still submit, but it may be marked as late.
+              This assignment is {daysOverdue}{' '}
+              {daysOverdue === 1 ? 'day' : 'days'} overdue. You can still
+              submit, but it may be marked as late.
             </Text>
           </View>
         )}
@@ -174,22 +197,21 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
             value={submissionText}
             onChangeText={setSubmissionText}
             textAlignVertical="top"
+            maxLength={1000}
           />
         </View>
       ) : (
         <View style={styles.fileUploadContainer}>
           <Text style={styles.label}>Upload File</Text>
           {!selectedFile ? (
-            <TouchableOpacity 
-              style={styles.fileUploadBox} 
+            <TouchableOpacity
+              style={styles.fileUploadBox}
               onPress={handlePickFile}
               activeOpacity={0.7}
             >
               <Icon name="upload" size={32} color={colors.primary} />
               <Text style={styles.fileUploadText}>Tap to select a file</Text>
-              <Text style={styles.fileUploadHint}>
-                Any file type accepted
-              </Text>
+              <Text style={styles.fileUploadHint}>Any file type accepted</Text>
             </TouchableOpacity>
           ) : (
             <View style={styles.selectedFileContainer}>
@@ -204,7 +226,7 @@ export const SubmitAssignmentModal: React.FC<SubmitAssignmentModalProps> = ({
                   </Text>
                 </View>
               </View>
-              <TouchableOpacity 
+              <TouchableOpacity
                 style={styles.removeFileButton}
                 onPress={handleRemoveFile}
                 activeOpacity={0.7}
@@ -417,4 +439,3 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
 });
-

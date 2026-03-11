@@ -33,7 +33,7 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
     queryFn: () => studentService.getSubmissionDetails(assignmentId!),
     enabled: !!token && !!assignmentId && visible,
   });
-
+  console.log('data', data);
   if (!assignmentId) return null;
 
   if (isLoading) {
@@ -52,7 +52,12 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Error loading submission details</Text>
-          <Button title="Close" onPress={onClose} variant="outline" style={styles.closeButton} />
+          <Button
+            title="Close"
+            onPress={onClose}
+            variant="outline"
+            style={styles.closeButton}
+          />
         </View>
       </Modal>
     );
@@ -66,21 +71,32 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Submission data not available</Text>
-          <Button title="Close" onPress={onClose} variant="outline" style={styles.closeButton} />
+          <Button
+            title="Close"
+            onPress={onClose}
+            variant="outline"
+            style={styles.closeButton}
+          />
         </View>
       </Modal>
     );
   }
 
-  const submittedDate = submission.submitted_at ? new Date(submission.submitted_at) : null;
+  const submittedDate = submission.submitted_at
+    ? new Date(submission.submitted_at)
+    : null;
 
   return (
-    <Modal visible={visible} onClose={onClose} title="Submission Details">
-      <ScrollView 
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+    <Modal
+      visible={visible}
+      onClose={onClose}
+      title="Submission Details"
+      scrollable={false}
+    >
+      <ScrollView
+        style={{ flex: 1 }}
+        contentContainerStyle={styles.modalContent}
       >
-        {/* Header with Icon */}
         <View style={styles.headerSection}>
           <Icon name="file-text" size={24} color={colors.primary} />
           <Text style={styles.headerTitle}>Submission Details</Text>
@@ -88,22 +104,29 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
 
         {/* Assignment Info Card */}
         <View style={styles.infoCard}>
-          <Text style={styles.assignmentTitle}>{submission.title || 'Assignment'}</Text>
+          <Text style={styles.assignmentTitle}>
+            {submission.title || 'Assignment'}
+          </Text>
           {submission.description && (
-            <Text style={styles.assignmentDescription}>{submission.description}</Text>
+            <Text style={styles.assignmentDescription} numberOfLines={3}>
+              {submission.description}
+            </Text>
           )}
           <View style={styles.detailsRow}>
             {submission.due_date && (
               <Text style={styles.detailText}>
-                Due: {new Date(submission.due_date).toLocaleDateString('en-US', { 
-                  month: '2-digit', 
-                  day: '2-digit', 
-                  year: 'numeric' 
+                Due:{' '}
+                {new Date(submission.due_date).toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric',
                 })}
               </Text>
             )}
             {submission.max_points && (
-              <Text style={styles.detailText}>Points: {submission.max_points}</Text>
+              <Text style={styles.detailText}>
+                Points: {submission.max_points}
+              </Text>
             )}
           </View>
         </View>
@@ -125,10 +148,10 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
               <Icon name="calendar" size={18} color={colors.textSecondary} />
               <Text style={styles.submissionDetailLabel}>Submitted:</Text>
               <Text style={styles.submissionDetailValue}>
-                {submittedDate.toLocaleDateString('en-US', { 
-                  month: '2-digit', 
-                  day: '2-digit', 
-                  year: 'numeric' 
+                {submittedDate.toLocaleDateString('en-US', {
+                  month: '2-digit',
+                  day: '2-digit',
+                  year: 'numeric',
                 })}
               </Text>
             </View>
@@ -139,7 +162,7 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
             <View style={styles.contentSection}>
               <Text style={styles.contentLabel}>Submission Text:</Text>
               <View style={styles.textSubmissionBox}>
-                <Text style={styles.textSubmissionContent}>
+                <Text style={styles.textSubmissionContent} numberOfLines={10}>
                   {submission.text_submission}
                 </Text>
               </View>
@@ -154,7 +177,9 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
                 <Icon name="file" size={24} color={colors.primary} />
                 <View style={styles.fileInfo}>
                   <Text style={styles.fileName}>Submitted File</Text>
-                  <Text style={styles.fileHint}>File uploaded successfully</Text>
+                  <Text style={styles.fileHint}>
+                    File uploaded successfully
+                  </Text>
                 </View>
               </View>
             </View>
@@ -167,9 +192,7 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
                 <Icon name="award" size={20} color={colors.success} />
                 <Text style={styles.gradeSectionTitle}>Grade</Text>
               </View>
-              <Text style={styles.gradeValue}>
-                {submission.grade} / {submission.max_points || 100}
-              </Text>
+              <Text style={styles.gradeValue}>{submission.grade}</Text>
               {submission.feedback && (
                 <View style={styles.feedbackBox}>
                   <Text style={styles.feedbackLabel}>Feedback:</Text>
@@ -205,8 +228,9 @@ export const ViewSubmissionModal: React.FC<ViewSubmissionModalProps> = ({
 };
 
 const styles = StyleSheet.create({
-  scrollContent: {
-    flexGrow: 1,
+  modalContent: {
+    padding: spacing.lg,
+    paddingBottom: spacing.xl,
   },
   headerSection: {
     flexDirection: 'row',

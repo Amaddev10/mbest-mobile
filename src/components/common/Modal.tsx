@@ -9,7 +9,7 @@ import {
   Text,
   StyleSheet,
   TouchableOpacity,
-  TouchableWithoutFeedback,
+  Pressable,
   ScrollView,
   KeyboardAvoidingView,
   Platform,
@@ -29,6 +29,8 @@ interface ModalProps {
   showCloseButton?: boolean;
   /** Max height in pixels. When undefined, uses 90% of screen height. */
   maxHeight?: number;
+  /** When false, modal will not wrap children in a ScrollView. */
+  scrollable?: boolean;
 }
 
 export const Modal: React.FC<ModalProps> = ({
@@ -39,6 +41,7 @@ export const Modal: React.FC<ModalProps> = ({
   children,
   showCloseButton = true,
   maxHeight,
+  scrollable = true,
 }) => {
   const insets = useSafeAreaInsets();
   const { height: screenHeight } = Dimensions.get('window');
@@ -61,43 +64,42 @@ export const Modal: React.FC<ModalProps> = ({
       statusBarTranslucent={true}
     >
       <View style={styles.overlay}>
-        <TouchableWithoutFeedback onPress={onClose}>
-          <View style={styles.backdrop} />
-        </TouchableWithoutFeedback>
-        <View style={styles.modalWrapper}>
-          <TouchableWithoutFeedback>
-            <KeyboardAvoidingView
-              behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-              style={styles.keyboardView}
-              keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+        <Pressable style={styles.backdrop} onPress={onClose} />
+        <View style={styles.modalWrapper} pointerEvents="box-none">
+          <KeyboardAvoidingView
+            behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+            style={styles.keyboardView}
+            keyboardVerticalOffset={Platform.OS === 'ios' ? 0 : 20}
+            pointerEvents="box-none"
+          >
+            <View
+              style={[
+                styles.modalContainer,
+                { 
+                  height: modalHeight, 
+                  paddingBottom: Math.max(safeBottomPadding, spacing.md) 
+                },
+              ]}
             >
-              <View
-                style={[
-                  styles.modalContainer,
-                  { 
-                    height: modalHeight, 
-                    paddingBottom: Math.max(safeBottomPadding, spacing.md) 
-                  },
-                ]}
-              >
-                {/* Header */}
-                <View style={styles.header}>
-                  <View style={styles.headerText}>
-                    <Text style={styles.title}>{title}</Text>
-                    {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
-                  </View>
-                  {showCloseButton && (
-                    <TouchableOpacity
-                      onPress={onClose}
-                      style={styles.closeButton}
-                      activeOpacity={0.7}
-                    >
-                      <Icon name="x" size={24} color={colors.text} />
-                    </TouchableOpacity>
-                  )}
+              {/* Header */}
+              <View style={styles.header}>
+                <View style={styles.headerText}>
+                  <Text style={styles.title}>{title}</Text>
+                  {subtitle ? <Text style={styles.subtitle}>{subtitle}</Text> : null}
                 </View>
+                {showCloseButton && (
+                  <TouchableOpacity
+                    onPress={onClose}
+                    style={styles.closeButton}
+                    activeOpacity={0.7}
+                  >
+                    <Icon name="x" size={24} color={colors.text} />
+                  </TouchableOpacity>
+                )}
+              </View>
 
-                {/* Content - minHeight: 0 allows ScrollView to shrink when parent is constrained */}
+              {/* Content */}
+              {scrollable ? (
                 <ScrollView
                   style={styles.content}
                   contentContainerStyle={styles.contentContainer}
@@ -107,9 +109,11 @@ export const Modal: React.FC<ModalProps> = ({
                 >
                   {children}
                 </ScrollView>
-              </View>
-            </KeyboardAvoidingView>
-          </TouchableWithoutFeedback>
+              ) : (
+                <View style={styles.content}>{children}</View>
+              )}
+            </View>
+          </KeyboardAvoidingView>
         </View>
       </View>
     </RNModal>

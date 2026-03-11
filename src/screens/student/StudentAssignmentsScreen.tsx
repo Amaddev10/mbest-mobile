@@ -474,10 +474,6 @@ export const StudentAssignmentsScreen: React.FC = () => {
           setSelectedAssignmentId(null);
           setShowSubmitModal(true);
         }}
-        onViewSubmission={() => {
-          setShowDetailsModal(false);
-          setShowViewSubmissionModal(true);
-        }}
         onEditSubmission={() => {
           setShowDetailsModal(false);
           setShowSubmitModal(true);
