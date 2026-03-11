@@ -4,7 +4,15 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity, ScrollView, RefreshControl, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+  Alert,
+} from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { studentService } from '../../services/api/student';
@@ -21,14 +29,20 @@ import { SubmitAssignmentModal } from '../../components/common/SubmitAssignmentM
 import { AssignmentDetailsModal } from '../../components/common/AssignmentDetailsModal';
 import { AskQuestionModal } from '../../components/common/AskQuestionModal';
 import { ViewSubmissionModal } from '../../components/common/ViewSubmissionModal';
+import { FilterTabs } from '../../components/common/FilterTabs';
+import type { FilterTabItem } from '../../components/common/FilterTabs';
 
 export const StudentAssignmentsScreen: React.FC = () => {
   const { token } = useAuthStore();
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<'all' | 'due' | 'submitted' | 'graded'>('all');
+  const [filter, setFilter] = useState<'all' | 'due' | 'submitted' | 'graded'>(
+    'all',
+  );
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
-  const [selectedAssignmentId, setSelectedAssignmentId] = useState<number | null>(null);
+  const [selectedAssignmentId, setSelectedAssignmentId] = useState<
+    number | null
+  >(null);
   const [showSubmitModal, setShowSubmitModal] = useState(false);
   const [showDetailsModal, setShowDetailsModal] = useState(false);
   const [showAskQuestionModal, setShowAskQuestionModal] = useState(false);
@@ -43,25 +57,42 @@ export const StudentAssignmentsScreen: React.FC = () => {
   });
 
   const submitMutation = useMutation({
-    mutationFn: ({ assignmentId, submissionData }: { assignmentId: number; submissionData: { text_submission?: string; file?: any } }) =>
-      studentService.submitAssignment(assignmentId, submissionData),
+    mutationFn: ({
+      assignmentId,
+      submissionData,
+    }: {
+      assignmentId: number;
+      submissionData: { text_submission?: string; file?: any };
+    }) => studentService.submitAssignment(assignmentId, submissionData),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ['studentAssignments'] });
       Alert.alert('Success', 'Assignment submitted successfully!');
     },
     onError: (error: any) => {
-      Alert.alert('Error', error?.response?.data?.message || 'Failed to submit assignment');
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to submit assignment',
+      );
     },
   });
 
   const questionMutation = useMutation({
-    mutationFn: (questionData: { subject: string; question: string; class_id?: number }) =>
-      studentService.submitQuestion(questionData),
+    mutationFn: (questionData: {
+      subject: string;
+      question: string;
+      class_id?: number;
+      attachments?: any[];
+    }) => studentService.submitQuestion(questionData),
     onSuccess: () => {
+      console.log('questionMutation', questionMutation);
       Alert.alert('Success', 'Question submitted successfully!');
     },
     onError: (error: any) => {
-      Alert.alert('Error', error?.response?.data?.message || 'Failed to submit question');
+      console.log('questionMutation', questionMutation);
+      Alert.alert(
+        'Error',
+        error?.response?.data?.message || 'Failed to submit question',
+      );
     },
   });
 
@@ -82,10 +113,52 @@ export const StudentAssignmentsScreen: React.FC = () => {
   }
 
   // Handle nested API response structures
-  const assignments = (data as any)?.data?.data || (data as any)?.data || data || [];
+  const assignments =
+    (data as any)?.data?.data || (data as any)?.data || data || [];
+  const getFilterCount = (
+    filterType: 'all' | 'due' | 'submitted' | 'graded',
+  ) => {
+    if (filterType === 'all') return assignments.length;
+    return assignments.filter((assignment: any) => {
+      if (filterType === 'due')
+        return assignment.status === 'pending' || assignment.status === 'due';
+      if (filterType === 'submitted') return assignment.status === 'submitted';
+      if (filterType === 'graded') return assignment.status === 'graded';
+      return false;
+    }).length;
+  };
+
+  const filterTabs: FilterTabItem[] = [
+    {
+      key: 'all',
+      label: 'All Assignments',
+      icon: 'file-text',
+      count: getFilterCount('all'),
+    },
+    {
+      key: 'due',
+      label: 'Due Soon',
+      icon: 'clock',
+      count: getFilterCount('due'),
+    },
+    {
+      key: 'submitted',
+      label: 'Submitted',
+      icon: 'check-circle',
+      count: getFilterCount('submitted'),
+    },
+    {
+      key: 'graded',
+      label: 'Graded',
+      icon: 'check',
+      count: getFilterCount('graded'),
+    },
+  ];
+
   const filteredAssignments = assignments.filter((assignment: any) => {
     if (filter === 'all') return true;
-    if (filter === 'due') return assignment.status === 'pending' || assignment.status === 'due';
+    if (filter === 'due')
+      return assignment.status === 'pending' || assignment.status === 'due';
     if (filter === 'submitted') return assignment.status === 'submitted';
     if (filter === 'graded') return assignment.status === 'graded';
     return true;
@@ -105,7 +178,11 @@ export const StudentAssignmentsScreen: React.FC = () => {
   };
 
   const isOverdue = (dueDate: string, status: string) => {
-    return new Date(dueDate) < new Date() && status !== 'graded' && status !== 'submitted';
+    return (
+      new Date(dueDate) < new Date() &&
+      status !== 'graded' &&
+      status !== 'submitted'
+    );
   };
 
   const onRefresh = async () => {
@@ -120,35 +197,22 @@ export const StudentAssignmentsScreen: React.FC = () => {
   return (
     <View style={styles.container}>
       <Header title="Assignments" showProfile={true} />
-      
+
       {/* Filter Tabs */}
       <View style={styles.filterTabsWrapper}>
-        <ScrollView 
-          horizontal 
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.filterTabsContainer}
-        >
-          {(['all', 'due', 'submitted', 'graded'] as const).map((f) => (
-            <TouchableOpacity
-              key={f}
-              style={[styles.filterTab, filter === f && styles.filterTabActive]}
-              onPress={() => setFilter(f)}
-              activeOpacity={0.7}
-            >
-              <Text 
-                style={[styles.filterTabText, filter === f && styles.filterTabTextActive]}
-                numberOfLines={1}
-              >
-                {f === 'all' ? 'All' : f === 'due' ? 'Due Soon' : f.charAt(0).toUpperCase() + f.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </ScrollView>
+        <FilterTabs
+          items={filterTabs}
+          selectedKey={filter}
+          onSelect={key =>
+            setFilter(key as 'all' | 'due' | 'submitted' | 'graded')
+          }
+          style={styles.filterTabsScroll}
+        />
       </View>
 
       <FlatList
         data={filteredAssignments}
-        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+        keyExtractor={item => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={[
           styles.listContent,
           filteredAssignments.length === 0 && styles.emptyListContent,
@@ -167,8 +231,9 @@ export const StudentAssignmentsScreen: React.FC = () => {
           const daysUntilDue = getDaysUntilDue(item.due_date);
           const dueSoon = isDueSoon(item.due_date);
           const overdue = isOverdue(item.due_date, item.status || '');
-          const hasHighPriority = item.priority === 'high' || item.priority === 'urgent';
-          
+          const hasHighPriority =
+            item.priority === 'high' || item.priority === 'urgent';
+
           return (
             <Card variant="elevated" style={styles.assignmentCard}>
               {/* Header with Icon, Title, and Badges */}
@@ -182,19 +247,26 @@ export const StudentAssignmentsScreen: React.FC = () => {
                       {item.title || 'Untitled Assignment'}
                     </Text>
                     <Text style={styles.assignmentMeta} numberOfLines={1}>
-                      {item.subject || item.class || 'General'} • {item.tutor_name || item.instructor || 'Instructor'}
+                      {item.subject || item.class || 'General'} •{' '}
+                      {item.tutor_name || item.instructor || 'Instructor'}
                     </Text>
                   </View>
                 </View>
                 <View style={styles.badgesContainer}>
                   {hasHighPriority && (
                     <View style={styles.priorityBadge}>
-                      <Text style={styles.priorityBadgeText}>high priority</Text>
+                      <Text style={styles.priorityBadgeText}>
+                        high priority
+                      </Text>
                     </View>
                   )}
                   {dueSoon && !overdue && (
                     <View style={styles.dueSoonBadge}>
-                      <Icon name="alert-circle" size={12} color={colors.textInverse} />
+                      <Icon
+                        name="alert-circle"
+                        size={12}
+                        color={colors.textInverse}
+                      />
                       <Text style={styles.dueSoonBadgeText}>Due soon</Text>
                     </View>
                   )}
@@ -211,13 +283,17 @@ export const StudentAssignmentsScreen: React.FC = () => {
               {/* Due Date and Points */}
               <View style={styles.detailsRow}>
                 <View style={styles.detailItem}>
-                  <Icon name="calendar" size={16} color={colors.textSecondary} />
+                  <Icon
+                    name="calendar"
+                    size={16}
+                    color={colors.textSecondary}
+                  />
                   <Text style={styles.detailLabel}>Due: </Text>
                   <Text style={styles.detailValue}>
-                    {dueDate.toLocaleDateString('en-US', { 
-                      month: '2-digit', 
-                      day: '2-digit', 
-                      year: 'numeric' 
+                    {dueDate.toLocaleDateString('en-US', {
+                      month: '2-digit',
+                      day: '2-digit',
+                      year: 'numeric',
                     })}
                   </Text>
                 </View>
@@ -229,7 +305,13 @@ export const StudentAssignmentsScreen: React.FC = () => {
                 )}
                 {(dueSoon || overdue) && (
                   <Text style={styles.dueWarningText}>
-                    {overdue ? 'Overdue' : daysUntilDue === 0 ? 'Due today' : daysUntilDue === 1 ? 'Due tomorrow' : `Due in ${daysUntilDue} days`}
+                    {overdue
+                      ? 'Overdue'
+                      : daysUntilDue === 0
+                      ? 'Due today'
+                      : daysUntilDue === 1
+                      ? 'Due tomorrow'
+                      : `Due in ${daysUntilDue} days`}
                   </Text>
                 )}
               </View>
@@ -260,7 +342,7 @@ export const StudentAssignmentsScreen: React.FC = () => {
                   />
                 )}
                 <View style={styles.secondaryButtons}>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.secondaryButton}
                     activeOpacity={0.7}
                     onPress={() => {
@@ -271,7 +353,7 @@ export const StudentAssignmentsScreen: React.FC = () => {
                   >
                     <Text style={styles.secondaryButtonText}>View Details</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.secondaryButton}
                     activeOpacity={0.7}
                     onPress={() => {
@@ -282,26 +364,30 @@ export const StudentAssignmentsScreen: React.FC = () => {
                   >
                     <Text style={styles.secondaryButtonText}>Ask Question</Text>
                   </TouchableOpacity>
-                  <TouchableOpacity 
+                  <TouchableOpacity
                     style={styles.secondaryButton}
                     activeOpacity={0.7}
                     onPress={() => {
                       navigation.navigate('MyQuestions');
                     }}
                   >
-                    <Text style={styles.secondaryButtonText}>View Q&A Thread</Text>
+                    <Text style={styles.secondaryButtonText}>
+                      View Q&A Thread
+                    </Text>
                   </TouchableOpacity>
                 </View>
               </View>
 
               {/* Status Badge */}
               {item.status && (
-                <View style={[
-                  styles.statusBadge,
-                  item.status === 'graded' && styles.statusBadgeGraded,
-                  item.status === 'submitted' && styles.statusBadgeSubmitted,
-                  overdue && styles.statusBadgeOverdue,
-                ]}>
+                <View
+                  style={[
+                    styles.statusBadge,
+                    item.status === 'graded' && styles.statusBadgeGraded,
+                    item.status === 'submitted' && styles.statusBadgeSubmitted,
+                    overdue && styles.statusBadgeOverdue,
+                  ]}
+                >
                   <Text style={styles.statusText}>
                     {item.status.charAt(0).toUpperCase() + item.status.slice(1)}
                   </Text>
@@ -312,10 +398,15 @@ export const StudentAssignmentsScreen: React.FC = () => {
         }}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
-            <Icon name="clipboard" size={80} color={colors.textTertiary} style={{ opacity: 0.5, marginBottom: spacing.xl }} />
+            <Icon
+              name="clipboard"
+              size={80}
+              color={colors.textTertiary}
+              style={{ opacity: 0.5, marginBottom: spacing.xl }}
+            />
             <Text style={styles.emptyTitle}>No Assignments Found</Text>
             <Text style={styles.emptyText}>
-              {filter === 'all' 
+              {filter === 'all'
                 ? "You don't have any assignments yet."
                 : `No ${filter} assignments at the moment.`}
             </Text>
@@ -333,12 +424,12 @@ export const StudentAssignmentsScreen: React.FC = () => {
         }}
         assignmentId={selectedAssignmentId || selectedAssignment?.id || null}
         assignment={selectedAssignment}
-        onSubmit={(submissionData) => {
+        onSubmit={submissionData => {
           const assignmentId = selectedAssignmentId || selectedAssignment?.id;
           if (assignmentId) {
-            submitMutation.mutate({ 
-              assignmentId, 
-              submissionData 
+            submitMutation.mutate({
+              assignmentId,
+              submissionData,
             });
             setShowSubmitModal(false);
             setSelectedAssignment(null);
@@ -379,12 +470,14 @@ export const StudentAssignmentsScreen: React.FC = () => {
         }}
         assignmentId={selectedAssignmentId || selectedAssignment?.id || null}
         assignment={selectedAssignment}
-        onSend={(question) => {
+        onSend={question => {
           // Submit question to API
           const questionData = {
             subject: question.subject,
             question: question.message,
-            class_id: selectedAssignment?.class_id || selectedAssignment?.class_model?.id,
+            class_id:
+              selectedAssignment?.class_id ||
+              selectedAssignment?.class_model?.id,
           };
           questionMutation.mutate(questionData);
           setShowAskQuestionModal(false);
@@ -417,39 +510,9 @@ const styles = StyleSheet.create({
     borderBottomColor: colors.borderLight,
     ...shadows.sm,
   },
-  filterTabsContainer: {
-    paddingHorizontal: spacing.md,
+  filterTabsScroll: {
+    paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    gap: spacing.sm,
-    alignItems: 'center',
-  },
-  filterTab: {
-    paddingVertical: spacing.sm + 2,
-    paddingHorizontal: spacing.lg + 4,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.background,
-    borderWidth: 1,
-    borderColor: colors.border,
-    marginRight: spacing.sm,
-    minWidth: 80,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  filterTabActive: {
-    backgroundColor: colors.primary,
-    borderColor: colors.primary,
-    ...shadows.sm,
-  },
-  filterTabText: {
-    ...textStyles.caption,
-    color: colors.text,
-    fontWeight: '600',
-    fontSize: 13,
-    includeFontPadding: false,
-    textAlign: 'center',
-  },
-  filterTabTextActive: {
-    color: colors.textInverse,
   },
   listContent: {
     padding: spacing.lg,

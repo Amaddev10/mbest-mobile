@@ -20,6 +20,7 @@ import { studentService } from '../../services/api/student';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius, shadows } from '../../constants/spacing';
+import { downloadFile, getFileIcon } from '../../utils/fileDownload';
 
 type QuestionStatus = 'all' | 'pending' | 'answered' | 'closed';
 
@@ -33,9 +34,9 @@ interface Question {
   question: string;
   priority: string;
   category: string;
-  status: string;
-  answer: string | null;
-  answered_at: string | null;
+  status: 'pending' | 'answered' | 'closed';
+  answer?: string | null;
+  answered_at?: string | null;
   created_at: string;
   updated_at: string;
   tutor?: {
@@ -51,8 +52,10 @@ interface Question {
   };
   attachments?: Array<{
     id: number;
+    file_path: string;
     file_name: string;
     file_type: string;
+    file_size?: string;
   }>;
 }
 
@@ -69,7 +72,7 @@ export const MyQuestionsScreen: React.FC = () => {
 
   const questions: Question[] = data?.data?.data || [];
 
-  const filteredQuestions = questions.filter((question) => {
+  const filteredQuestions = questions.filter(question => {
     const matchesStatus =
       selectedStatus === 'all' || question.status === selectedStatus;
     const matchesSearch =
@@ -81,7 +84,7 @@ export const MyQuestionsScreen: React.FC = () => {
 
   const getStatusCount = (status: QuestionStatus) => {
     if (status === 'all') return questions.length;
-    return questions.filter((q) => q.status === status).length;
+    return questions.filter(q => q.status === status).length;
   };
 
   const renderFilterTab = (
@@ -127,31 +130,115 @@ export const MyQuestionsScreen: React.FC = () => {
     );
   };
 
+  const handleDownloadAttachment = async (attachment: any) => {
+    const baseUrl = 'https://engine-rebuild.co.uk/mbest/public/storage/';
+    const fileUrl = `${baseUrl}${attachment.file_path}`;
+
+    await downloadFile({
+      url: fileUrl,
+      filename: attachment.file_name,
+      fileType: attachment.file_type,
+    });
+  };
+
   const renderQuestionCard = ({ item }: { item: Question }) => {
     const createdDate = new Date(item.created_at);
     const hasAttachments = item.attachments && item.attachments.length > 0;
+    const hasAnswer = item.status === 'answered' && item.answer;
+    const isHighPriority =
+      item.priority === 'high' || item.priority === 'urgent';
 
     return (
-      <TouchableOpacity style={styles.questionCard} activeOpacity={0.7}>
+      <View style={styles.questionCard}>
         <View style={styles.questionHeader}>
           <View style={styles.questionHeaderLeft}>
             <Icon name="message-circle" size={20} color={colors.primary} />
             <Text style={styles.questionSubject}>{item.subject}</Text>
           </View>
-          <View
-            style={[
-              styles.statusBadge,
-              item.status === 'answered' && styles.statusBadgeAnswered,
-              item.status === 'closed' && styles.statusBadgeClosed,
-            ]}
-          >
-            <Text style={styles.statusBadgeText}>{item.status}</Text>
+          <View style={styles.badgesContainer}>
+            {item.priority && (
+              <View
+                style={[
+                  styles.priorityBadge,
+                  item.priority === 'medium' && styles.priorityBadgeMedium,
+                  item.priority === 'low' && styles.priorityBadgeLow,
+                ]}
+              >
+                <Icon
+                  name={isHighPriority ? 'alert-circle' : 'tag'}
+                  size={10}
+                  color={colors.textInverse}
+                />
+                <Text style={styles.priorityBadgeText}>{item.priority}</Text>
+              </View>
+            )}
+            <View
+              style={[
+                styles.statusBadge,
+                item.status === 'answered' && styles.statusBadgeAnswered,
+                item.status === 'closed' && styles.statusBadgeClosed,
+              ]}
+            >
+              <Text
+                style={[
+                  styles.statusBadgeText,
+                  {
+                    textTransform: 'capitalize',
+                    color:
+                      item.status === 'answered'
+                        ? colors.success
+                        : colors.warning,
+                  },
+                ]}
+              >
+                {item.status}
+              </Text>
+            </View>
           </View>
         </View>
 
         <Text style={styles.questionText} numberOfLines={2}>
           {item.question}
         </Text>
+
+        {hasAnswer && (
+          <View style={styles.answerSection}>
+            <View style={styles.answerHeader}>
+              <Icon name="check-circle" size={16} color={colors.success} />
+              <Text style={styles.answerLabel}>Answer:</Text>
+            </View>
+            <Text style={styles.answerText}>{item.answer}</Text>
+          </View>
+        )}
+
+        {hasAttachments && (
+          <View style={styles.attachmentsSection}>
+            <Text style={styles.attachmentsLabel}>Attachments:</Text>
+            {item.attachments!.map(attachment => (
+              <TouchableOpacity
+                key={attachment.id}
+                style={styles.attachmentItem}
+                onPress={() => handleDownloadAttachment(attachment)}
+                activeOpacity={0.7}
+              >
+                <Icon
+                  name={
+                    getFileIcon(
+                      attachment.file_type,
+                      attachment.file_name,
+                    ) as any
+                  }
+                  size={16}
+                  color={colors.primary}
+                />
+                <Text style={styles.attachmentName} numberOfLines={1}>
+                  {attachment.file_name}
+                </Text>
+                <Icon name="download" size={16} color={colors.primary} />
+              </TouchableOpacity>
+            ))}
+          </View>
+        )}
 
         <View style={styles.questionMeta}>
           <View style={styles.metaItem}>
@@ -178,14 +265,6 @@ export const MyQuestionsScreen: React.FC = () => {
             </Text>
           </View>
           <View style={styles.footerRight}>
-            {hasAttachments && (
-              <View style={styles.attachmentIndicator}>
-                <Icon name="link" size={14} color={colors.textSecondary} />
-                <Text style={styles.footerText}>
-                  {item.attachments!.length}
-                </Text>
-              </View>
-            )}
             <Text style={styles.footerText}>
               {createdDate.toLocaleDateString('en-US', {
                 month: 'short',
@@ -194,7 +273,7 @@ export const MyQuestionsScreen: React.FC = () => {
             </Text>
           </View>
         </View>
-      </TouchableOpacity>
+      </View>
     );
   };
 
@@ -249,14 +328,18 @@ export const MyQuestionsScreen: React.FC = () => {
         {/* Questions List */}
         {filteredQuestions.length === 0 ? (
           <View style={styles.emptyContainer}>
-            <Icon name="message-circle" size={64} color={colors.textSecondary} />
+            <Icon
+              name="message-circle"
+              size={64}
+              color={colors.textSecondary}
+            />
             <Text style={styles.emptyText}>No questions found.</Text>
           </View>
         ) : (
           <FlatList
             data={filteredQuestions}
             renderItem={renderQuestionCard}
-            keyExtractor={(item) => item.id.toString()}
+            keyExtractor={item => item.id.toString()}
             contentContainerStyle={styles.listContent}
             showsVerticalScrollIndicator={false}
             refreshControl={
@@ -393,6 +476,33 @@ const styles = StyleSheet.create({
     color: colors.text,
     includeFontPadding: false,
   },
+  badgesContainer: {
+    flexDirection: 'row',
+    gap: spacing.xs,
+    alignItems: 'center',
+  },
+  priorityBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs / 2,
+    backgroundColor: colors.error,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: spacing.xs / 2,
+    borderRadius: borderRadius.full,
+  },
+  priorityBadgeMedium: {
+    backgroundColor: colors.warningLight,
+  },
+  priorityBadgeLow: {
+    backgroundColor: colors.textSecondary,
+  },
+  priorityBadgeText: {
+    fontSize: 10,
+    fontWeight: '600',
+    color: colors.textInverse,
+    includeFontPadding: false,
+    textTransform: 'capitalize',
+  },
   statusBadge: {
     backgroundColor: colors.warningLight + '20',
     paddingHorizontal: spacing.sm,
@@ -408,7 +518,6 @@ const styles = StyleSheet.create({
   statusBadgeText: {
     fontSize: 11,
     fontWeight: '600',
-    color: colors.warningLight,
     includeFontPadding: false,
     textTransform: 'lowercase',
   },
@@ -418,6 +527,64 @@ const styles = StyleSheet.create({
     color: colors.text,
     lineHeight: 20,
     marginBottom: spacing.sm,
+    includeFontPadding: false,
+  },
+  answerSection: {
+    backgroundColor: colors.success + '10',
+    borderLeftWidth: 3,
+    borderLeftColor: colors.success,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+  },
+  answerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    marginBottom: spacing.xs,
+  },
+  answerLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.success,
+    includeFontPadding: false,
+  },
+  answerText: {
+    fontSize: 14,
+    fontWeight: '400',
+    color: colors.text,
+    lineHeight: 20,
+    includeFontPadding: false,
+  },
+  attachmentsSection: {
+    backgroundColor: colors.backgroundSecondary,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginBottom: spacing.sm,
+  },
+  attachmentsLabel: {
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.text,
+    marginBottom: spacing.xs,
+    includeFontPadding: false,
+  },
+  attachmentItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.surface,
+    padding: spacing.sm,
+    borderRadius: borderRadius.md,
+    marginTop: spacing.xs,
+    borderWidth: 1,
+    borderColor: colors.borderLight,
+  },
+  attachmentName: {
+    flex: 1,
+    fontSize: 13,
+    fontWeight: '500',
+    color: colors.text,
     includeFontPadding: false,
   },
   questionMeta: {

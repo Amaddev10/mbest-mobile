@@ -160,3 +160,184 @@
 - StudentClassesScreen.tsx
 
 ### Total Changes: 6 files, 15+ style updates, 3 new features implemented
+
+---
+
+## AssignmentDetailsModal.tsx
+### Date: March 10, 2026
+### Changes: Scrolling Issue Fix
+
+#### 1. Nested ScrollView Problem
+- **ISSUE**: Modal content was not scrolling properly
+- **ROOT CAUSE**: Nested ScrollView conflict (Modal.tsx has ScrollView, AssignmentDetailsModal added another)
+- **SOLUTION**: Removed inner ScrollView from AssignmentDetailsModal
+
+#### 2. Implementation Changes
+- Replaced ScrollView wrapper with React Fragment (<>...</>)
+- Removed scrollContent style (no longer needed)
+- Removed maxHeight constraint from Modal component call
+- Modal now uses default height (85% of screen) for proper scrolling
+
+#### 3. Result
+- Content scrolls smoothly through all sections
+- All assignment details, submission status, and buttons are accessible
+- No more stuck or clipped content
+
+---
+
+## MyQuestionsScreen.tsx
+### Date: March 10, 2026
+### Changes: New Screen Implementation
+
+#### 1. Screen Purpose
+- Display and manage student questions submitted to tutors
+- Filter questions by status (All, Pending, Answered, Closed)
+- Search questions by subject or content
+- View question details with tutor, class, and assignment information
+
+#### 2. API Integration
+- **Endpoint**: GET /api/v1/student/questions
+- **Service Method**: studentService.getQuestions()
+- **Query Key**: ['studentQuestions']
+- **Response**: Paginated list of questions with tutor, assignment, class, and attachments data
+
+#### 3. UI Components
+
+**Header Section:**
+- Title: "My Questions"
+- Subtitle: "View and manage your questions to tutors"
+- Back navigation button
+
+**Search Bar:**
+- Magnifying glass icon on left
+- Placeholder: "Search questions by subject or content..."
+- Clear button (X icon) when text entered
+- Real-time filtering
+
+**Filter Tabs (Horizontal Scrollable):**
+- 4 tabs: All Questions, Pending, Answered, Closed
+- Each tab shows: Icon + Label + Count Badge
+- Active tab: Green background, white text
+- Inactive tab: White background, gray text
+- Compact pill-shaped design
+- Horizontal scroll for overflow
+
+**Question Cards:**
+- Header: Message icon + Subject + Status badge (color-coded)
+- Question text (2 lines with ellipsis)
+- Meta info: Class name + Assignment title (with icons)
+- Footer: Tutor name + Attachment count + Created date
+- White background with shadow and border
+
+**Empty State:**
+- Large message-circle icon
+- "No questions found." text
+- Centered display
+
+#### 4. Features Implemented
+- Pull-to-refresh functionality
+- Status filtering (all/pending/answered/closed)
+- Search by subject or question content
+- Count badges update dynamically
+- Horizontal scrolling tabs
+- Responsive card layout
+- Loading and error states
+
+#### 5. Navigation Integration
+- Added to StudentStackParamList as 'MyQuestions'
+- Registered in StudentNavigator
+- Accessible from "View Q&A Thread" button in StudentAssignmentsScreen
+- Uses useNavigation hook for navigation
+
+#### 6. Styling Details
+- Compact pill-shaped filter tabs
+- Full border radius for rounded appearance
+- Proper spacing and padding throughout
+- Color-coded status badges (pending: yellow, answered: green, closed: gray)
+- Consistent icon usage (Lucide icons)
+- Shadow and border on cards for depth
+
+#### 7. Technical Implementation
+- TypeScript with strict typing
+- React Query for data fetching and caching
+- FlatList for efficient rendering
+- ScrollView from react-native-gesture-handler for smooth horizontal scrolling
+- RefreshControl for pull-to-refresh
+- Custom Icon component integration
+
+---
+
+## student.ts (API Service)
+### Date: March 10, 2026
+### Changes: Questions API Methods
+
+#### 1. New Methods Added
+- **submitQuestion**: POST /student/questions - Submit new question with subject, question text, and optional class_id
+- **getQuestions**: GET /student/questions - Fetch all student questions with pagination
+
+#### 2. Response Structure
+- Questions include: id, subject, question, status, priority, category
+- Related data: tutor info, assignment details, class info
+- Attachments array with file information
+- Timestamps: created_at, updated_at, answered_at
+
+---
+
+## AppNavigator.tsx
+### Date: March 10, 2026
+### Changes: Navigation Updates
+
+#### 1. Screen Registration
+- Imported MyQuestionsScreen component
+- Added MyQuestions route to StudentStack
+- Route configuration: headerShown: false
+
+#### 2. Type Definitions
+- Added MyQuestions: undefined to StudentStackParamList
+- Enables type-safe navigation throughout the app
+
+---
+
+## StudentAssignmentsScreen.tsx
+### Date: March 10, 2026
+### Changes: Navigation Integration
+
+#### 1. Navigation Hook
+- Added useNavigation import from @react-navigation/native
+- Created navigation constant with useNavigation<any>()
+
+#### 2. View Q&A Thread Button
+- Connected button to navigate to MyQuestions screen
+- onPress handler: navigation.navigate('MyQuestions')
+- Provides access to questions list from assignments screen
+
+---
+
+## Summary of Latest Changes
+
+### New Features
+1. **MyQuestionsScreen**: Complete questions management interface
+2. **Question Filtering**: Filter by status with dynamic count badges
+3. **Search Functionality**: Real-time search by subject/content
+4. **Horizontal Scrolling Tabs**: Smooth scrolling filter tabs
+5. **Pull-to-Refresh**: Refresh questions list
+
+### Bug Fixes
+1. **AssignmentDetailsModal Scrolling**: Fixed nested ScrollView conflict
+2. **Icon Errors**: Replaced unavailable icons (list, x-circle) with available ones
+
+### UI/UX Improvements
+1. **Compact Tab Design**: Pill-shaped tabs with proper sizing
+2. **Color-Coded Status**: Visual status indicators on badges
+3. **Responsive Layout**: Horizontal scroll for overflow content
+4. **Clean Card Design**: Shadow and border for visual hierarchy
+
+### Files Modified
+- AssignmentDetailsModal.tsx (scrolling fix)
+- MyQuestionsScreen.tsx (new file)
+- student.ts (API methods)
+- AppNavigator.tsx (navigation)
+- navigation.ts (types)
+- StudentAssignmentsScreen.tsx (navigation integration)
+
+### Total Changes: 12 files, 25+ style updates, 5 new features implemented
