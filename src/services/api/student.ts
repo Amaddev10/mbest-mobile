@@ -267,45 +267,61 @@ export interface AttendanceData {
 export const studentService = {
   // Dashboard
   getDashboard: async (): Promise<ApiResponse<StudentDashboardData>> => {
-    const response = await apiClient.get<ApiResponse<StudentDashboardData>>('/student/dashboard');
+    const response = await apiClient.get<ApiResponse<StudentDashboardData>>(
+      '/student/dashboard',
+    );
     return response.data;
   },
 
   // Classes
   getClasses: async (): Promise<ApiResponse<Class[]>> => {
-    const response = await apiClient.get<ApiResponse<Class[]>>('/student/classes');
+    const response = await apiClient.get<ApiResponse<Class[]>>(
+      '/student/classes',
+    );
     return response.data;
   },
 
   getClassDetails: async (id: number): Promise<ApiResponse<ClassDetails>> => {
-    const response = await apiClient.get<ApiResponse<ClassDetails>>(`/student/classes/${id}`);
+    const response = await apiClient.get<ApiResponse<ClassDetails>>(
+      `/student/classes/${id}`,
+    );
     return response.data;
   },
 
   enrollInClass: async (id: number): Promise<ApiResponse<void>> => {
-    const response = await apiClient.post<ApiResponse<void>>(`/student/classes/${id}/enroll`);
+    const response = await apiClient.post<ApiResponse<void>>(
+      `/student/classes/${id}/enroll`,
+    );
     return response.data;
   },
 
   unenrollFromClass: async (id: number): Promise<ApiResponse<void>> => {
-    const response = await apiClient.post<ApiResponse<void>>(`/student/classes/${id}/unenroll`);
+    const response = await apiClient.post<ApiResponse<void>>(
+      `/student/classes/${id}/unenroll`,
+    );
     return response.data;
   },
 
   // Assignments
   getAssignments: async (): Promise<ApiResponse<Assignment[]>> => {
-    const response = await apiClient.get<ApiResponse<Assignment[]>>('/student/assignments');
+    const response = await apiClient.get<ApiResponse<Assignment[]>>(
+      '/student/assignments',
+    );
     return response.data;
   },
 
-  getAssignmentDetails: async (id: number): Promise<ApiResponse<AssignmentDetails>> => {
-    const response = await apiClient.get<ApiResponse<AssignmentDetails>>(`/student/assignments/${id}`);
+  getAssignmentDetails: async (
+    id: number,
+  ): Promise<ApiResponse<AssignmentDetails>> => {
+    const response = await apiClient.get<ApiResponse<AssignmentDetails>>(
+      `/student/assignments/${id}`,
+    );
     return response.data;
   },
 
   submitAssignment: async (
     assignmentId: number,
-    data: { text_submission?: string; file?: any }
+    data: { text_submission?: string; file?: any },
   ): Promise<ApiResponse<any>> => {
     const formData = new FormData();
 
@@ -329,13 +345,17 @@ export const studentService = {
         headers: {
           'Content-Type': 'multipart/form-data',
         },
-      }
+      },
     );
     return response.data;
   },
 
-  getSubmissionDetails: async (assignmentId: number): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>(`/student/assignments/${assignmentId}/submission`);
+  getSubmissionDetails: async (
+    assignmentId: number,
+  ): Promise<ApiResponse<any>> => {
+    const response = await apiClient.get<ApiResponse<any>>(
+      `/student/assignments/${assignmentId}/submission`,
+    );
     return response.data;
   },
 
@@ -343,31 +363,43 @@ export const studentService = {
     subject: string;
     question: string;
     class_id?: number;
+    attachments?: any[];
   }): Promise<ApiResponse<any>> => {
-    const response = await apiClient.post<ApiResponse<any>>('/student/questions', questionData);
+    const response = await apiClient.post<ApiResponse<any>>(
+      '/student/questions',
+      questionData,
+    );
+    console.log('questionData', questionData);
     return response.data;
   },
 
   getQuestions: async (): Promise<ApiResponse<any>> => {
-    const response = await apiClient.get<ApiResponse<any>>('/student/questions');
+    const response = await apiClient.get<ApiResponse<any>>(
+      '/student/questions',
+    );
     return response.data;
   },
 
   // Grades
   getGrades: async (): Promise<ApiResponse<GradesResponse>> => {
-    const response = await apiClient.get<ApiResponse<GradesResponse>>('/student/grades');
+    const response = await apiClient.get<ApiResponse<GradesResponse>>(
+      '/student/grades',
+    );
     return response.data;
   },
 
   getGradeDetails: async (id: number): Promise<ApiResponse<Grade>> => {
-    const response = await apiClient.get<ApiResponse<Grade>>(`/student/grades/${id}`);
+    const response = await apiClient.get<ApiResponse<Grade>>(
+      `/student/grades/${id}`,
+    );
     return response.data;
   },
 
   // Attendance
   getAttendance: async (): Promise<ApiResponse<AttendanceData>> => {
-    const response = await apiClient.get<ApiResponse<AttendanceData>>('/student/attendance');
+    const response = await apiClient.get<ApiResponse<AttendanceData>>(
+      '/student/attendance',
+    );
     return response.data;
   },
 };
-

@@ -3,7 +3,14 @@
  */
 
 import React, { useState } from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, ScrollView, Alert } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+  ScrollView,
+  Alert,
+} from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { launchImageLibrary } from 'react-native-image-picker';
 import { pick, types } from '@react-native-documents/picker';
@@ -41,7 +48,13 @@ interface AskQuestionModalProps {
   onClose: () => void;
   assignmentId: number | null;
   assignment?: Assignment | null;
-  onSend: (question: { subject: string; priority: string; category: string; message: string; attachments?: any[] }) => void;
+  onSend: (question: {
+    subject: string;
+    priority: string;
+    category: string;
+    message: string;
+    attachments?: any[];
+  }) => void;
 }
 
 const PRIORITIES = ['Low', 'Medium', 'High', 'Urgent'];
@@ -99,15 +112,15 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
       // Use DocumentPicker to allow all file types
       const result = await pick({
         type: [
-          types.images,      // jpg, png, gif, etc.
-          types.pdf,         // PDF files
-          types.doc,         // Word documents
-          types.docx,        // Word documents
-          types.ppt,         // PowerPoint
-          types.pptx,        // PowerPoint
-          types.xls,         // Excel
-          types.xlsx,        // Excel
-          types.plainText,   // Plain text
+          types.images, // jpg, png, gif, etc.
+          types.pdf, // PDF files
+          types.doc, // Word documents
+          types.docx, // Word documents
+          types.ppt, // PowerPoint
+          types.pptx, // PowerPoint
+          types.xls, // Excel
+          types.xlsx, // Excel
+          types.plainText, // Plain text
         ],
         allowMultiSelection: true,
         maxFiles: 3 - attachedFiles.length,
@@ -119,10 +132,13 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
       }
     } catch (err: any) {
       // Check if user cancelled the picker
-      if (err?.code === 'DOCUMENT_PICKER_CANCELED' || err?.message?.includes('cancel')) {
+      if (
+        err?.code === 'DOCUMENT_PICKER_CANCELED' ||
+        err?.message?.includes('cancel')
+      ) {
         return;
       }
-      
+
       // Only show error for actual errors
       if (err?.code !== 'DOCUMENT_PICKER_CANCELED') {
         Alert.alert('Error', 'Failed to pick file');
@@ -138,7 +154,13 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
 
   const handleSend = () => {
     if (subject.trim() && message.trim()) {
-      onSend({ subject, priority, category, message, attachments: attachedFiles });
+      onSend({
+        subject,
+        priority,
+        category,
+        message,
+        attachments: attachedFiles.map((file) => file.name).filter(Boolean),
+      });
       // Reset form
       setSubject('');
       setPriority('Medium');
@@ -147,11 +169,18 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
       setAttachedFiles([]);
       onClose();
     }
+    console.log('handleSend', {
+      subject,
+      priority,
+      category,
+      message,
+      attachments: attachedFiles,
+    });
   };
 
   return (
     <Modal visible={visible} onClose={onClose} title="Ask a Question">
-      <ScrollView 
+      <ScrollView
         showsVerticalScrollIndicator={false}
         keyboardShouldPersistTaps="handled"
         contentContainerStyle={styles.modalContent}
@@ -164,7 +193,16 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
 
         {/* Subtitle */}
         <Text style={styles.subtitle}>
-          Ask about: {(assignment as any)?.title || 'Untitled Assignment'} • {(assignment as any)?.class_model?.name || (assignment as any)?.subject || (assignment as any)?.class || 'General'} • {(assignment as any)?.tutor?.user?.name || (assignment as any)?.tutor_name || (assignment as any)?.instructor || 'Instructor'}
+          Ask about: {(assignment as any)?.title || 'Untitled Assignment'} •{' '}
+          {(assignment as any)?.class_model?.name ||
+            (assignment as any)?.subject ||
+            (assignment as any)?.class ||
+            'General'}{' '}
+          •{' '}
+          {(assignment as any)?.tutor?.user?.name ||
+            (assignment as any)?.tutor_name ||
+            (assignment as any)?.instructor ||
+            'Instructor'}
         </Text>
 
         {/* Subject Input */}
@@ -178,8 +216,12 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
         {/* Priority Dropdown */}
         <View style={styles.dropdownContainer}>
           <Text style={styles.label}>Priority</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.priorityScroll}>
-            {PRIORITIES.map((p) => (
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            style={styles.priorityScroll}
+          >
+            {PRIORITIES.map(p => (
               <TouchableOpacity
                 key={p}
                 style={[
@@ -205,8 +247,17 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
         {/* Priority Badge Display */}
         <View style={styles.priorityBadgeContainer}>
           <Text style={styles.label}>Priority:</Text>
-          <View style={[styles.priorityBadge, priority === 'High' || priority === 'Urgent' ? styles.priorityBadgeHigh : {}]}>
-            <Text style={styles.priorityBadgeText}>{priority.toLowerCase()}</Text>
+          <View
+            style={[
+              styles.priorityBadge,
+              priority === 'High' || priority === 'Urgent'
+                ? styles.priorityBadgeHigh
+                : {},
+            ]}
+          >
+            <Text style={styles.priorityBadgeText}>
+              {priority.toLowerCase()}
+            </Text>
           </View>
         </View>
 
@@ -219,15 +270,15 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
             activeOpacity={0.7}
           >
             <Text style={styles.categoryDropdownText}>{category}</Text>
-            <Icon 
-              name={showCategoryDropdown ? 'chevron-down' : 'chevron-down'} 
-              size={20} 
-              color={colors.textSecondary} 
+            <Icon
+              name={showCategoryDropdown ? 'chevron-down' : 'chevron-down'}
+              size={20}
+              color={colors.textSecondary}
             />
           </TouchableOpacity>
           {showCategoryDropdown && (
             <View style={styles.categoryDropdownList}>
-              {CATEGORIES.map((cat) => (
+              {CATEGORIES.map(cat => (
                 <TouchableOpacity
                   key={cat}
                   style={[
@@ -261,7 +312,11 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
         <View style={styles.attachmentsContainer}>
           <Text style={styles.label}>Attachments (Optional)</Text>
           <View style={styles.attachmentsRow}>
-            <TouchableOpacity style={styles.attachButton} activeOpacity={0.7} onPress={handlePickFile}>
+            <TouchableOpacity
+              style={styles.attachButton}
+              activeOpacity={0.7}
+              onPress={handlePickFile}
+            >
               <Icon name="upload" size={18} color={colors.primary} />
               <Text style={styles.attachButtonText}>Attach Files</Text>
             </TouchableOpacity>
@@ -269,7 +324,7 @@ export const AskQuestionModal: React.FC<AskQuestionModalProps> = ({
               {attachedFiles.length}/3 files attached
             </Text>
           </View>
-          
+
           {/* Attached Files List */}
           {attachedFiles.length > 0 && (
             <View style={styles.attachedFilesList}>
@@ -535,4 +590,3 @@ const styles = StyleSheet.create({
     minHeight: 200,
   },
 });
-

@@ -475,6 +475,7 @@ export const StudentAssignmentsScreen: React.FC = () => {
           const questionData = {
             subject: question.subject,
             question: question.message,
+            attachments: question.attachments,
             class_id:
               selectedAssignment?.class_id ||
               selectedAssignment?.class_model?.id,
