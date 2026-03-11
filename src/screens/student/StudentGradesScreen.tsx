@@ -4,11 +4,22 @@
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, FlatList, TouchableOpacity } from 'react-native';
+import {
+  View,
+  Text,
+  StyleSheet,
+  FlatList,
+  TouchableOpacity,
+  RefreshControl,
+} from 'react-native';
 import { useQuery } from '@tanstack/react-query';
 import { useNavigation } from '@react-navigation/native';
 import type { NavigationProp } from '@react-navigation/native';
-import { studentService, type Grade } from '../../services/api/student';
+import {
+  studentService,
+  type Grade,
+  type GradesResponse,
+} from '../../services/api/student';
 import { useAuthStore } from '../../store/authStore';
 import { colors } from '../../constants/colors';
 import { spacing, borderRadius, shadows } from '../../constants/spacing';
@@ -19,14 +30,55 @@ import { Button } from '../../components/common/Button';
 import { Header } from '../../components/common/Header';
 import { Icon } from '../../components/common/Icon';
 import type { StudentStackParamList } from '../../types/navigation';
+import type { ApiResponse } from '../../types/api';
 
 type NavigationPropType = NavigationProp<StudentStackParamList>;
+
+const clampPercentage = (value: number): number => {
+  if (Number.isNaN(value)) {
+    return 0;
+  }
+  return Math.max(0, Math.min(100, value));
+};
+
+const getProgressColor = (percentage: number): string => {
+  const value = clampPercentage(percentage);
+
+  if (value >= 90) {
+    return colors.success;
+  }
+  if (value >= 50 && value <= 80) {
+    return `${colors.successLight}90`;
+  }
+  if (value >= 10 && value <= 40) {
+    return colors.error;
+  }
+  if (value > 80 && value < 90) {
+    return colors.success;
+  }
+  return colors.info;
+};
+
+const getProgressMessage = (percentage: number): string | undefined => {
+  const value = clampPercentage(percentage);
+
+  if (value >= 10 && value <= 40) {
+    if (value < 25) {
+      return 'Critical zone — immediate improvement needed.';
+    }
+    return `Needs improvement — currently at ${value}%.`;
+  }
+
+  return undefined;
+};
 
 export const StudentGradesScreen: React.FC = () => {
   const navigation = useNavigation<NavigationPropType>();
   const { token } = useAuthStore();
 
-  const { data, isLoading, error, refetch } = useQuery({
+  const { data, isLoading, error, refetch, isFetching } = useQuery<
+    ApiResponse<GradesResponse>
+  >({
     queryKey: ['studentGrades'],
     queryFn: () => studentService.getGrades(),
     enabled: !!token,
@@ -43,16 +95,26 @@ export const StudentGradesScreen: React.FC = () => {
         <View style={styles.errorContainer}>
           <Icon name="alert-circle" size={64} color={colors.error} />
           <Text style={styles.errorText}>Error loading grades</Text>
-          <Button title="Retry" onPress={() => refetch()} variant="primary" style={styles.retryButton} />
+          <Button
+            title="Retry"
+            onPress={() => refetch()}
+            variant="primary"
+            style={styles.retryButton}
+          />
         </View>
       </View>
     );
   }
 
-  // Handle nested API response structures (data.data.data for paginated responses)
-  const gradesData = data?.data?.data || data?.data;
-  const grades: Grade[] = gradesData?.data || [];
-  const overallAverage = gradesData?.overall_average || data?.data?.overall_average || 0;
+  const gradesResponse = data?.data;
+  const paginatedData = gradesResponse?.data;
+  const grades: Grade[] = Array.isArray(paginatedData)
+    ? paginatedData
+    : paginatedData?.data || [];
+  const overallAverage = gradesResponse?.overall_average || 0;
+  const clampedOverallAverage = clampPercentage(overallAverage);
+  const overallMessage = getProgressMessage(clampedOverallAverage);
+  const isRefreshing = isFetching && !isLoading;
 
   return (
     <View style={styles.container}>
@@ -67,7 +129,26 @@ export const StudentGradesScreen: React.FC = () => {
               </View>
               <View style={styles.summaryInfo}>
                 <Text style={styles.summaryLabel}>Overall Average</Text>
-                <Text style={styles.summaryValue}>{overallAverage.toFixed(1)}%</Text>
+                <Text style={styles.summaryValue}>
+                  {clampedOverallAverage.toFixed(1)}%
+                </Text>
+                <View style={styles.progressBarTrack}>
+                  <View
+                    style={[
+                      styles.progressBarFill,
+                      styles.summaryProgressFill,
+                      {
+                        width: `${clampedOverallAverage}%`,
+                        backgroundColor: getProgressColor(
+                          clampedOverallAverage,
+                        ),
+                      },
+                    ]}
+                  />
+                </View>
+                {overallMessage && (
+                  <Text style={styles.progressMessage}>{overallMessage}</Text>
+                )}
               </View>
             </View>
           </Card>
@@ -76,103 +157,161 @@ export const StudentGradesScreen: React.FC = () => {
 
       <FlatList
         data={grades}
-        keyExtractor={(item) => item.id?.toString() || Math.random().toString()}
+        keyExtractor={item => item.id?.toString() || Math.random().toString()}
         contentContainerStyle={[
           styles.listContent,
           grades.length === 0 && styles.emptyListContent,
         ]}
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={isRefreshing}
+            onRefresh={() => refetch()}
+            tintColor={colors.success}
+            colors={[colors.success]}
+          />
+        }
         renderItem={({ item }) => {
           const gradeValue = parseFloat(item.grade || '0');
-          const maxGrade = parseFloat(item.max_grade || '100');
+          const rawMaxGrade = parseFloat(item.max_grade || '100');
+          const maxGrade = rawMaxGrade > 0 ? rawMaxGrade : 100;
           const percentage = Math.round((gradeValue / maxGrade) * 100);
-          const isExcellent = percentage >= 90;
-          const isGood = percentage >= 70;
-          const isPassing = percentage >= 60;
-          
+          const clampedPercentage = clampPercentage(percentage);
+          const progressColor = getProgressColor(clampedPercentage);
+          const progressMessage = getProgressMessage(clampedPercentage);
+          const isExcellent = clampedPercentage >= 90;
+          const isGood = clampedPercentage >= 70;
+          const isPassing = clampedPercentage >= 60;
+
           return (
             <TouchableOpacity
-              onPress={() => navigation.navigate('GradeDetails', { gradeId: item.id })}
+              onPress={() =>
+                navigation.navigate('GradeDetails', { gradeId: item.id })
+              }
               activeOpacity={0.7}
             >
-            <Card variant="elevated" style={styles.gradeCard}>
-              <View style={styles.gradeCardHeader}>
-                <View style={[
-                  styles.gradeIconContainer,
-                  isExcellent && styles.gradeIconExcellent,
-                  isGood && !isExcellent && styles.gradeIconGood,
-                  isPassing && !isGood && styles.gradeIconPassing,
-                  !isPassing && styles.gradeIconFail,
-                ]}>
-                  <Icon 
-                    name={isExcellent ? 'trophy' : isGood ? 'award' : isPassing ? 'bar-chart' : 'file-text'} 
-                    size={22} 
-                    color={colors.textInverse} 
-                  />
-                </View>
-                <View style={styles.gradeInfo}>
-                  <Text 
-                    style={styles.gradeAssignment}
-                    numberOfLines={2}
-                    ellipsizeMode="tail"
+              <Card variant="elevated" style={styles.gradeCard}>
+                <View style={styles.gradeCardHeader}>
+                  <View
+                    style={[
+                      styles.gradeIconContainer,
+                      isExcellent && styles.gradeIconExcellent,
+                      isGood && !isExcellent && styles.gradeIconGood,
+                      isPassing && !isGood && styles.gradeIconPassing,
+                      !isPassing && styles.gradeIconFail,
+                    ]}
                   >
-                    {item.assessment || item.assignment?.title || 'Untitled Assignment'}
-                  </Text>
-                  {item.subject && (
-                    <Text style={styles.gradeSubject} numberOfLines={1}>
-                      {item.subject}
+                    <Icon
+                      name={
+                        isExcellent
+                          ? 'trophy'
+                          : isGood
+                          ? 'award'
+                          : isPassing
+                          ? 'bar-chart'
+                          : 'file-text'
+                      }
+                      size={22}
+                      color={colors.textInverse}
+                    />
+                  </View>
+                  <View style={styles.gradeInfo}>
+                    <Text
+                      style={styles.gradeAssignment}
+                      numberOfLines={2}
+                      ellipsizeMode="tail"
+                    >
+                      {item.assessment ||
+                        item.assignment?.title ||
+                        'Untitled Assignment'}
                     </Text>
-                  )}
+                    {item.subject && (
+                      <Text style={styles.gradeSubject} numberOfLines={1}>
+                        {item.subject}
+                      </Text>
+                    )}
+                  </View>
                 </View>
-              </View>
 
-              <View style={styles.gradeDetails}>
-                <View style={styles.gradeScoreContainer}>
-                  <View style={styles.scoreRow}>
-                    <Text style={styles.scoreLabel}>Score:</Text>
-                    <Text style={styles.scoreValue}>
-                      {gradeValue.toFixed(1)}/{maxGrade.toFixed(1)}
+                <View style={styles.gradeDetails}>
+                  <View style={styles.gradeScoreContainer}>
+                    <View style={styles.scoreRow}>
+                      <Text style={styles.scoreLabel}>Score:</Text>
+                      <Text style={styles.scoreValue}>
+                        {gradeValue.toFixed(1)}/{maxGrade.toFixed(1)}
+                      </Text>
+                    </View>
+                    <View
+                      style={[
+                        styles.percentageBadge,
+                        isExcellent && styles.percentageBadgeExcellent,
+                        isGood && !isExcellent && styles.percentageBadgeGood,
+                        isPassing && !isGood && styles.percentageBadgePassing,
+                        !isPassing && styles.percentageBadgeFail,
+                      ]}
+                    >
+                      <Text style={styles.percentageText}>
+                        {clampedPercentage}%
+                      </Text>
+                    </View>
+                  </View>
+                  <View style={styles.progressBarTrack}>
+                    <View
+                      style={[
+                        styles.progressBarFill,
+                        {
+                          width: `${clampedPercentage}%`,
+                          backgroundColor: progressColor,
+                        },
+                      ]}
+                    />
+                  </View>
+                  {progressMessage && (
+                    <Text style={styles.progressMessage}>
+                      {progressMessage}
                     </Text>
+                  )}
+                  <View style={styles.gradeDateContainer}>
+                    <Icon
+                      name="calendar"
+                      size={14}
+                      color={colors.textSecondary}
+                    />
+                    <Text style={styles.gradeDate}>
+                      {new Date(item.date).toLocaleDateString('en-US', {
+                        year: 'numeric',
+                        month: 'short',
+                        day: 'numeric',
+                      })}
+                    </Text>
+                    {item.category && (
+                      <>
+                        <Text style={styles.dateLabel}> • </Text>
+                        <Text style={styles.gradeDate}>{item.category}</Text>
+                      </>
+                    )}
                   </View>
-                  <View style={[
-                    styles.percentageBadge,
-                    isExcellent && styles.percentageBadgeExcellent,
-                    isGood && !isExcellent && styles.percentageBadgeGood,
-                    isPassing && !isGood && styles.percentageBadgePassing,
-                    !isPassing && styles.percentageBadgeFail,
-                  ]}>
-                    <Text style={styles.percentageText}>{percentage}%</Text>
-                  </View>
-                </View>
-                <View style={styles.gradeDateContainer}>
-                  <Icon name="calendar" size={14} color={colors.textSecondary} />
-                  <Text style={styles.gradeDate}>
-                    {new Date(item.date).toLocaleDateString('en-US', {
-                      year: 'numeric',
-                      month: 'short',
-                      day: 'numeric',
-                    })}
-                  </Text>
-                  {item.category && (
-                    <>
-                      <Text style={styles.dateLabel}> • </Text>
-                      <Text style={styles.gradeDate}>{item.category}</Text>
-                    </>
+                  {item.notes && (
+                    <View style={styles.gradeNotes}>
+                      <View style={styles.notesLabelRow}>
+                        <Icon
+                          name="message-circle"
+                          size={12}
+                          color={colors.textSecondary}
+                        />
+                        <Text style={styles.notesLabel}>Notes:</Text>
+                      </View>
+                      <Text
+                        style={styles.notesText}
+                        numberOfLines={2}
+                        ellipsizeMode="tail"
+                      >
+                        {item.notes}
+                      </Text>
+                    </View>
                   )}
                 </View>
-                {item.notes && (
-                  <View style={styles.gradeNotes}>
-                    <View style={styles.notesLabelRow}>
-                      <Icon name="message-circle" size={12} color={colors.textSecondary} />
-                      <Text style={styles.notesLabel}>Notes:</Text>
-                    </View>
-                    <Text style={styles.notesText} numberOfLines={2} ellipsizeMode="tail">
-                      {item.notes}
-                    </Text>
-                  </View>
-                )}
-              </View>
-            </Card>
+              </Card>
             </TouchableOpacity>
           );
         }}
@@ -229,6 +368,32 @@ const styles = StyleSheet.create({
     fontWeight: '700',
     color: colors.primary,
     lineHeight: 34,
+    includeFontPadding: false,
+  },
+  progressBarTrack: {
+    height: 8,
+    borderRadius: borderRadius.full,
+    backgroundColor: colors.borderLight,
+    overflow: 'hidden',
+    marginTop: spacing.sm,
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: borderRadius.full,
+  },
+  summaryProgressFill: {
+    shadowColor: colors.primary,
+    shadowOpacity: 0.25,
+    shadowRadius: 6,
+    shadowOffset: { width: 0, height: 2 },
+    elevation: 3,
+  },
+  progressMessage: {
+    marginTop: spacing.sm,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.error,
+    lineHeight: 16,
     includeFontPadding: false,
   },
   listContent: {
@@ -358,7 +523,7 @@ const styles = StyleSheet.create({
   percentageText: {
     fontSize: 14,
     fontWeight: '700',
-    color: colors.text,
+    color: colors.textInverse,
     lineHeight: 18,
     includeFontPadding: false,
   },
@@ -418,4 +583,3 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
 });
-
