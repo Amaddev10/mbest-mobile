@@ -123,7 +123,7 @@ export const MyQuestionsScreen: React.FC = () => {
               isActive && styles.filterTabBadgeTextActive,
             ]}
           >
-            {count}
+            {count > 9 ? '9+' : count}
           </Text>
         </View>
       </TouchableOpacity>

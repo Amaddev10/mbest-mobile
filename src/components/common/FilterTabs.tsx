@@ -62,13 +62,13 @@ export const FilterTabs: React.FC<FilterTabsProps> = ({
             <Text style={[styles.tabText, isActive && styles.tabTextActive]}>
               {item.label}
             </Text>
-            <View
-              style={[styles.badge, isActive && styles.badgeActive]}
-            >
+            <View style={[styles.badge, isActive && styles.badgeActive]}>
               <Text
                 style={[styles.badgeText, isActive && styles.badgeTextActive]}
               >
-                {item.count}
+                {typeof item.count === 'number' && item.count > 9
+                  ? '9+'
+                  : item.count}
               </Text>
             </View>
           </TouchableOpacity>

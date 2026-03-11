@@ -36,7 +36,7 @@ export const StudentAssignmentsScreen: React.FC = () => {
   const { token } = useAuthStore();
   const navigation = useNavigation<any>();
   const queryClient = useQueryClient();
-  const [filter, setFilter] = useState<'all' | 'due' | 'submitted' | 'graded'>(
+  const [filter, setFilter] = useState<'all' | 'due' | 'submitted'>(
     'all',
   );
   const [selectedAssignment, setSelectedAssignment] = useState<any>(null);
@@ -116,18 +116,49 @@ export const StudentAssignmentsScreen: React.FC = () => {
     );
   }
 
+  const getDaysUntilDue = (dueDate: string) => {
+    const due = new Date(dueDate);
+    const now = new Date();
+    const diffTime = due.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+    return diffDays;
+  };
+
+  const isDueSoon = (dueDate: string) => {
+    const days = getDaysUntilDue(dueDate);
+    return days >= 0 && days <= 2;
+  };
+
+  const isOverdue = (dueDate: string, status: string) => {
+    return (
+      new Date(dueDate) < new Date() &&
+      status !== 'graded' &&
+      status !== 'submitted'
+    );
+  };
+
   // Handle nested API response structures
   const assignments =
     (data as any)?.data?.data || (data as any)?.data || data || [];
+
+  const hasSubmission = (assignment: any) =>
+    Array.isArray(assignment?.submissions) && assignment.submissions.length > 0;
+
+  const isSubmissionPending = (assignment: any) =>
+    assignment.status !== 'graded' && assignment.status !== 'submitted';
+
+  const isDueSoonAssignment = (assignment: any) =>
+    isSubmissionPending(assignment) && isDueSoon(assignment.due_date);
+
   const getFilterCount = (
-    filterType: 'all' | 'due' | 'submitted' | 'graded',
+    filterType: 'all' | 'due' | 'submitted',
   ) => {
     if (filterType === 'all') return assignments.length;
     return assignments.filter((assignment: any) => {
       if (filterType === 'due')
-        return assignment.status === 'pending' || assignment.status === 'due';
-      if (filterType === 'submitted') return assignment.status === 'submitted';
-      if (filterType === 'graded') return assignment.status === 'graded';
+        return isDueSoonAssignment(assignment);
+      if (filterType === 'submitted')
+        return assignment.status === 'submitted' || hasSubmission(assignment);
       return false;
     }).length;
   };
@@ -151,43 +182,23 @@ export const StudentAssignmentsScreen: React.FC = () => {
       icon: 'check-circle',
       count: getFilterCount('submitted'),
     },
-    {
-      key: 'graded',
-      label: 'Graded',
-      icon: 'check',
-      count: getFilterCount('graded'),
-    },
+    // {
+    //   key: 'graded',
+    //   label: 'Graded',
+    //   icon: 'check',
+    //   count: getFilterCount('graded'),
+    // },
   ];
 
   const filteredAssignments = assignments.filter((assignment: any) => {
     if (filter === 'all') return true;
     if (filter === 'due')
-      return assignment.status === 'pending' || assignment.status === 'due';
-    if (filter === 'submitted') return assignment.status === 'submitted';
+      return isDueSoonAssignment(assignment);
+    if (filter === 'submitted')
+      return assignment.status === 'submitted' || hasSubmission(assignment);
     if (filter === 'graded') return assignment.status === 'graded';
     return true;
   });
-
-  const getDaysUntilDue = (dueDate: string) => {
-    const due = new Date(dueDate);
-    const now = new Date();
-    const diffTime = due.getTime() - now.getTime();
-    const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-    return diffDays;
-  };
-
-  const isDueSoon = (dueDate: string) => {
-    const days = getDaysUntilDue(dueDate);
-    return days >= 0 && days <= 3;
-  };
-
-  const isOverdue = (dueDate: string, status: string) => {
-    return (
-      new Date(dueDate) < new Date() &&
-      status !== 'graded' &&
-      status !== 'submitted'
-    );
-  };
 
   const onRefresh = async () => {
     setRefreshing(true);
@@ -208,7 +219,7 @@ export const StudentAssignmentsScreen: React.FC = () => {
           items={filterTabs}
           selectedKey={filter}
           onSelect={key =>
-            setFilter(key as 'all' | 'due' | 'submitted' | 'graded')
+            setFilter(key as 'all' | 'due' | 'submitted')
           }
           style={styles.filterTabsScroll}
         />
@@ -237,6 +248,8 @@ export const StudentAssignmentsScreen: React.FC = () => {
           const overdue = isOverdue(item.due_date, item.status || '');
           const hasHighPriority =
             item.priority === 'high' || item.priority === 'urgent';
+          const submission = item.submissions?.[0];
+          const gradeValue = submission?.grade;
 
           return (
             <Card variant="elevated" style={styles.assignmentCard}>
@@ -305,6 +318,12 @@ export const StudentAssignmentsScreen: React.FC = () => {
                   <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Points: </Text>
                     <Text style={styles.detailValue}>{item.max_points}</Text>
+                  </View>
+                )}
+                {gradeValue && (
+                  <View style={styles.detailItem}>
+                    <Text style={styles.detailLabel}>Grade: </Text>
+                    <Text style={styles.detailValue}>{gradeValue}%</Text>
                   </View>
                 )}
                 {(dueSoon || overdue) && (
