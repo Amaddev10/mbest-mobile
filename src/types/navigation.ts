@@ -54,6 +54,7 @@ export type StudentTabParamList = {
   StudentAttendance: undefined;
   Messages: undefined;
   Settings: undefined;
+  StudentResources: undefined;
 };
 
 export type StudentStackParamList = {
@@ -61,6 +62,7 @@ export type StudentStackParamList = {
   ClassDetails: { classId: number };
   GradeDetails: { gradeId: number };
   MyQuestions: undefined;
+  StudentResources: undefined;
 };
 
 export type SubscriptionStackParamList = {
@@ -90,4 +92,3 @@ declare global {
     interface RootParamList extends RootStackParamList {}
   }
 }
-

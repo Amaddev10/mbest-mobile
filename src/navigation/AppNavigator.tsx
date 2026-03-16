@@ -67,7 +67,16 @@ import { ProfileScreen } from '../screens/common/ProfileScreen';
 import { SettingsScreen } from '../screens/common/SettingsScreen';
 import { ParentGate } from '../components/ParentGate';
 
-import type { RootStackParamList, AuthStackParamList, TutorTabParamList, TutorStackParamList, StudentTabParamList, StudentStackParamList, ParentTabParamList, ParentStackParamList } from '../types/navigation';
+import type {
+  RootStackParamList,
+  AuthStackParamList,
+  TutorTabParamList,
+  TutorStackParamList,
+  StudentTabParamList,
+  StudentStackParamList,
+  ParentTabParamList,
+  ParentStackParamList,
+} from '../types/navigation';
 
 const RootStack = createStackNavigator<RootStackParamList>();
 const AuthStack = createStackNavigator<AuthStackParamList>();
@@ -84,7 +93,10 @@ const AuthNavigator = () => {
     <AuthStack.Navigator screenOptions={{ headerShown: false }}>
       <AuthStack.Screen name="Login" component={LoginScreen} />
       <AuthStack.Screen name="SignUp" component={SignUpScreen} />
-      <AuthStack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+      <AuthStack.Screen
+        name="ForgotPassword"
+        component={ForgotPasswordScreen}
+      />
     </AuthStack.Navigator>
   );
 };
@@ -92,15 +104,18 @@ const AuthNavigator = () => {
 // Tutor Tab Navigator (used inside TutorStack)
 const TutorTabsNavigator = () => {
   const insets = useSafeAreaInsets();
-  const safeBottomPadding = Math.max(insets.bottom, Platform.OS === 'ios' ? spacing.sm : spacing.xs);
+  const safeBottomPadding = Math.max(
+    insets.bottom,
+    Platform.OS === 'ios' ? spacing.sm : spacing.xs,
+  );
   const baseHeight = Platform.OS === 'ios' ? 60 : 64;
-  
+
   return (
     <TutorTab.Navigator
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
-        headerStyle: { 
+        headerStyle: {
           backgroundColor: colors.primary,
           elevation: 0,
           shadowOpacity: 0,
@@ -140,60 +155,60 @@ const TutorTabsNavigator = () => {
         },
       }}
     >
-      <TutorTab.Screen 
-        name="TutorDashboard" 
-        component={TutorDashboardScreen} 
-        options={{ 
+      <TutorTab.Screen
+        name="TutorDashboard"
+        component={TutorDashboardScreen}
+        options={{
           headerShown: false, // Use custom Header component
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size || 22} color={color} />
           ),
-        }} 
+        }}
       />
-      <TutorTab.Screen 
-        name="TutorCalendar" 
-        component={TutorCalendarScreen} 
-        options={{ 
+      <TutorTab.Screen
+        name="TutorCalendar"
+        component={TutorCalendarScreen}
+        options={{
           headerShown: false, // Use custom Header component
           tabBarLabel: 'Calendar',
           tabBarIcon: ({ color, size }) => (
             <Icon name="calendar" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <TutorTab.Screen 
-        name="TutorStudents" 
-        component={TutorStudentsScreen} 
-        options={{ 
+      <TutorTab.Screen
+        name="TutorStudents"
+        component={TutorStudentsScreen}
+        options={{
           headerShown: false, // Use custom Header component
           tabBarLabel: 'Students',
           tabBarIcon: ({ color, size }) => (
             <Icon name="users" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <TutorTab.Screen 
-        name="TutorAssignments" 
-        component={TutorAssignmentsScreen} 
-        options={{ 
+      <TutorTab.Screen
+        name="TutorAssignments"
+        component={TutorAssignmentsScreen}
+        options={{
           headerShown: false, // Use custom Header component
           tabBarLabel: 'Assignments',
           tabBarIcon: ({ color, size }) => (
             <Icon name="file-text" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <TutorTab.Screen 
-        name="TutorMore" 
-        component={TutorMoreScreen} 
-        options={{ 
+      <TutorTab.Screen
+        name="TutorMore"
+        component={TutorMoreScreen}
+        options={{
           headerShown: false, // Use custom Header component
-          tabBarLabel: 'More', 
+          tabBarLabel: 'More',
           tabBarIcon: ({ color, size }) => (
             <Icon name="more-vertical" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
     </TutorTab.Navigator>
   );
@@ -209,20 +224,50 @@ const TutorNavigator = () => {
     >
       <TutorStack.Screen name="TutorTabs" component={TutorTabsNavigator} />
       <TutorStack.Screen name="TutorClasses" component={TutorClassesScreen} />
-      <TutorStack.Screen name="TutorClassDetails" component={TutorClassDetailsScreen} />
-      <TutorStack.Screen name="TutorStudentDetails" component={TutorStudentDetailsScreen} />
-      <TutorStack.Screen name="TutorAssignmentDetails" component={TutorAssignmentDetailsScreen} />
-      <TutorStack.Screen name="TutorLessonRequests" component={TutorLessonRequestsScreen} />
+      <TutorStack.Screen
+        name="TutorClassDetails"
+        component={TutorClassDetailsScreen}
+      />
+      <TutorStack.Screen
+        name="TutorStudentDetails"
+        component={TutorStudentDetailsScreen}
+      />
+      <TutorStack.Screen
+        name="TutorAssignmentDetails"
+        component={TutorAssignmentDetailsScreen}
+      />
+      <TutorStack.Screen
+        name="TutorLessonRequests"
+        component={TutorLessonRequestsScreen}
+      />
       <TutorStack.Screen name="TutorSessions" component={TutorSessionsScreen} />
-      <TutorStack.Screen name="TutorSessionDetails" component={TutorSessionDetailsScreen} />
+      <TutorStack.Screen
+        name="TutorSessionDetails"
+        component={TutorSessionDetailsScreen}
+      />
       <TutorStack.Screen name="AddLesson" component={AddLessonScreen} />
-      <TutorStack.Screen name="TutorAvailability" component={TutorAvailabilityScreen} />
-      <TutorStack.Screen name="TutorAttendance" component={TutorAttendanceScreen} />
+      <TutorStack.Screen
+        name="TutorAvailability"
+        component={TutorAvailabilityScreen}
+      />
+      <TutorStack.Screen
+        name="TutorAttendance"
+        component={TutorAttendanceScreen}
+      />
       <TutorStack.Screen name="TutorHours" component={TutorHoursScreen} />
       <TutorStack.Screen name="TutorInvoices" component={TutorInvoicesScreen} />
-      <TutorStack.Screen name="TutorLessonHistory" component={TutorLessonHistoryScreen} />
-      <TutorStack.Screen name="TutorQuestions" component={TutorQuestionsScreen} />
-      <TutorStack.Screen name="TutorResources" component={TutorResourcesScreen} />
+      <TutorStack.Screen
+        name="TutorLessonHistory"
+        component={TutorLessonHistoryScreen}
+      />
+      <TutorStack.Screen
+        name="TutorQuestions"
+        component={TutorQuestionsScreen}
+      />
+      <TutorStack.Screen
+        name="TutorResources"
+        component={TutorResourcesScreen}
+      />
     </TutorStack.Navigator>
   );
 };
@@ -230,9 +275,12 @@ const TutorNavigator = () => {
 // Student Tab Navigator
 const StudentTabsNavigator = () => {
   const insets = useSafeAreaInsets();
-  const safeBottomPadding = Math.max(insets.bottom, Platform.OS === 'ios' ? spacing.sm : spacing.xs);
+  const safeBottomPadding = Math.max(
+    insets.bottom,
+    Platform.OS === 'ios' ? spacing.sm : spacing.xs,
+  );
   const baseHeight = Platform.OS === 'ios' ? 60 : 64;
-  
+
   return (
     <StudentTab.Navigator
       screenOptions={{
@@ -264,59 +312,59 @@ const StudentTabsNavigator = () => {
         },
       }}
     >
-      <StudentTab.Screen 
-        name="StudentDashboard" 
-        component={StudentDashboardScreen} 
-        options={{ 
+      <StudentTab.Screen
+        name="StudentDashboard"
+        component={StudentDashboardScreen}
+        options={{
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size || 22} color={color} />
           ),
-        }} 
+        }}
       />
-      <StudentTab.Screen 
-        name="StudentClasses" 
-        component={StudentClassesScreen} 
-        options={{ 
-          title: 'Classes', 
+      <StudentTab.Screen
+        name="StudentClasses"
+        component={StudentClassesScreen}
+        options={{
+          title: 'Classes',
           tabBarLabel: 'Classes',
           tabBarIcon: ({ color, size }) => (
             <Icon name="book" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <StudentTab.Screen 
-        name="StudentAssignments" 
-        component={StudentAssignmentsScreen} 
-        options={{ 
-          title: 'Assignments', 
+      <StudentTab.Screen
+        name="StudentAssignments"
+        component={StudentAssignmentsScreen}
+        options={{
+          title: 'Assignments',
           tabBarLabel: 'Assignments',
           tabBarIcon: ({ color, size }) => (
             <Icon name="file-text" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <StudentTab.Screen 
-        name="StudentGrades" 
-        component={StudentGradesScreen} 
-        options={{ 
-          title: 'Grades', 
+      <StudentTab.Screen
+        name="StudentGrades"
+        component={StudentGradesScreen}
+        options={{
+          title: 'Grades',
           tabBarLabel: 'Grades',
           tabBarIcon: ({ color, size }) => (
             <Icon name="star" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <StudentTab.Screen 
-        name="StudentAttendance" 
-        component={StudentAttendanceScreen} 
-        options={{ 
-          title: 'Attendance', 
+      <StudentTab.Screen
+        name="StudentAttendance"
+        component={StudentAttendanceScreen}
+        options={{
+          title: 'Attendance',
           tabBarLabel: 'Attendance',
           tabBarIcon: ({ color, size }) => (
             <Icon name="check-circle" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
     </StudentTab.Navigator>
   );
@@ -330,9 +378,12 @@ const StudentNavigator = () => {
         headerShown: false,
       }}
     >
-      <StudentStack.Screen name="StudentTabs" component={StudentTabsNavigator} />
-      <StudentStack.Screen 
-        name="GradeDetails" 
+      <StudentStack.Screen
+        name="StudentTabs"
+        component={StudentTabsNavigator}
+      />
+      <StudentStack.Screen
+        name="GradeDetails"
         component={StudentGradeDetailsScreen}
         options={{
           headerShown: false,
@@ -353,8 +404,8 @@ const StudentNavigator = () => {
           title: 'Grade Details',
         }}
       />
-      <StudentStack.Screen 
-        name="ClassDetails" 
+      <StudentStack.Screen
+        name="ClassDetails"
         component={StudentClassDetailsScreen}
         options={{
           headerShown: false,
@@ -375,12 +426,16 @@ const StudentNavigator = () => {
           title: 'Class Details',
         }}
       />
-      <StudentStack.Screen 
-        name="MyQuestions" 
+      <StudentStack.Screen
+        name="MyQuestions"
         component={MyQuestionsScreen}
         options={{
           headerShown: false,
         }}
+      />
+      <StudentStack.Screen
+        name="StudentResources"
+        component={TutorResourcesScreen}
       />
     </StudentStack.Navigator>
   );
@@ -389,15 +444,18 @@ const StudentNavigator = () => {
 // Parent Tab Navigator (used inside ParentStack)
 const ParentTabsNavigator = () => {
   const insets = useSafeAreaInsets();
-  const safeBottomPadding = Math.max(insets.bottom, Platform.OS === 'ios' ? spacing.sm : spacing.xs);
+  const safeBottomPadding = Math.max(
+    insets.bottom,
+    Platform.OS === 'ios' ? spacing.sm : spacing.xs,
+  );
   const baseHeight = Platform.OS === 'ios' ? 60 : 64;
-  
+
   return (
     <ParentTab.Navigator
       screenOptions={{
         tabBarActiveTintColor: colors.primary,
         tabBarInactiveTintColor: colors.textTertiary,
-        headerStyle: { 
+        headerStyle: {
           backgroundColor: colors.primary,
           elevation: 0,
           shadowOpacity: 0,
@@ -437,71 +495,71 @@ const ParentTabsNavigator = () => {
         },
       }}
     >
-      <ParentTab.Screen 
-        name="ParentDashboard" 
-        component={ParentDashboardScreen} 
-        options={{ 
-          title: 'Parent Dashboard', 
+      <ParentTab.Screen
+        name="ParentDashboard"
+        component={ParentDashboardScreen}
+        options={{
+          title: 'Parent Dashboard',
           tabBarLabel: 'Home',
           tabBarIcon: ({ color, size }) => (
             <Icon name="home" size={size || 22} color={color} />
           ),
-        }} 
+        }}
       />
-      <ParentTab.Screen 
-        name="ParentClasses" 
-        component={ParentClassesScreen} 
-        options={{ 
-          title: 'Classes', 
+      <ParentTab.Screen
+        name="ParentClasses"
+        component={ParentClassesScreen}
+        options={{
+          title: 'Classes',
           tabBarLabel: 'Classes',
           tabBarIcon: ({ color, size }) => (
             <Icon name="book" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <ParentTab.Screen 
-        name="ParentAssignments" 
-        component={ParentAssignmentsScreen} 
-        options={{ 
-          title: 'Assignments', 
+      <ParentTab.Screen
+        name="ParentAssignments"
+        component={ParentAssignmentsScreen}
+        options={{
+          title: 'Assignments',
           tabBarLabel: 'Assignments',
           tabBarIcon: ({ color, size }) => (
             <Icon name="file-text" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <ParentTab.Screen 
-        name="ParentGrades" 
-        component={ParentGradesScreen} 
-        options={{ 
-          title: 'Grades', 
+      <ParentTab.Screen
+        name="ParentGrades"
+        component={ParentGradesScreen}
+        options={{
+          title: 'Grades',
           tabBarLabel: 'Grades',
           tabBarIcon: ({ color, size }) => (
             <Icon name="star" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <ParentTab.Screen 
-        name="ParentAttendance" 
-        component={ParentAttendanceScreen} 
-        options={{ 
-          title: 'Attendance Tracking', 
+      <ParentTab.Screen
+        name="ParentAttendance"
+        component={ParentAttendanceScreen}
+        options={{
+          title: 'Attendance Tracking',
           tabBarLabel: 'Attendance',
           tabBarIcon: ({ color, size }) => (
             <Icon name="activity" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
-      <ParentTab.Screen 
-        name="ParentBilling" 
-        component={ParentBillingScreen} 
-        options={{ 
-          title: 'Billing', 
+      <ParentTab.Screen
+        name="ParentBilling"
+        component={ParentBillingScreen}
+        options={{
+          title: 'Billing',
           tabBarLabel: 'Billing',
           tabBarIcon: ({ color, size }) => (
             <Icon name="credit-card" size={size || 20} color={color} />
           ),
-        }} 
+        }}
       />
     </ParentTab.Navigator>
   );
@@ -529,9 +587,9 @@ const ParentNavigator = () => {
 
 // Main App Navigator
 const AppNavigator = () => {
-  const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const user = useAuthStore((state) => state.user);
-  const loadAuth = useAuthStore((state) => state.loadAuth);
+  const isAuthenticated = useAuthStore(state => state.isAuthenticated);
+  const user = useAuthStore(state => state.user);
+  const loadAuth = useAuthStore(state => state.loadAuth);
   const [isLoading, setIsLoading] = React.useState(true);
 
   useEffect(() => {
@@ -555,17 +613,25 @@ const AppNavigator = () => {
   }
 
   return (
-    <NavigationContainer key={isAuthenticated ? 'authenticated' : 'unauthenticated'}>
+    <NavigationContainer
+      key={isAuthenticated ? 'authenticated' : 'unauthenticated'}
+    >
       <RootStack.Navigator screenOptions={{ headerShown: false }}>
         {!isAuthenticated ? (
           <RootStack.Screen name="Auth" component={AuthNavigator} />
         ) : (
           <>
-            {user?.role === 'tutor' && <RootStack.Screen name="Tutor" component={TutorNavigator} />}
-            {user?.role === 'student' && <RootStack.Screen name="Student" component={StudentNavigator} />}
-            {user?.role === 'parent' && <RootStack.Screen name="Parent" component={ParentGate} />}
-            <RootStack.Screen 
-              name="Profile" 
+            {user?.role === 'tutor' && (
+              <RootStack.Screen name="Tutor" component={TutorNavigator} />
+            )}
+            {user?.role === 'student' && (
+              <RootStack.Screen name="Student" component={StudentNavigator} />
+            )}
+            {user?.role === 'parent' && (
+              <RootStack.Screen name="Parent" component={ParentGate} />
+            )}
+            <RootStack.Screen
+              name="Profile"
               component={ProfileScreen}
               options={{
                 headerShown: false,
